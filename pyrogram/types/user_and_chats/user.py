@@ -174,9 +174,19 @@ class User(Object, Update):
         dc_id: int = None,
         phone_number: str = None,
         photo: "types.ChatPhoto" = None,
-        restrictions: List["types.Restriction"] = None
+        restrictions: List["types.Restriction"] = None,
+        usernames: List["raw.types.Username"] = None
     ):
         super().__init__(client)
+
+        if username is None and usernames is not None and len(usernames) > 0:
+            for u in usernames:
+                if u.active:
+                    username = u.username
+                    break
+
+            if username is None:
+                username = usernames[0].username
 
         self.id = id
         self.is_self = is_self
@@ -202,6 +212,7 @@ class User(Object, Update):
         self.phone_number = phone_number
         self.photo = photo
         self.restrictions = restrictions
+        self.usernames = usernames
 
     @property
     def mention(self):
@@ -239,7 +250,8 @@ class User(Object, Update):
             phone_number=user.phone,
             photo=types.ChatPhoto._parse(client, user.photo, user.id, user.access_hash),
             restrictions=types.List([types.Restriction._parse(r) for r in user.restriction_reason]) or None,
-            client=client
+            client=client,
+            usernames=types.List([types.Username._parse(u) for u in user.usernames]) or None
         )
 
     @staticmethod
