@@ -88,7 +88,19 @@ class BanChatMember:
                         send_gifs=True,
                         send_games=True,
                         send_inline=True,
-                        embed_links=True
+                        embed_links=True,
+                        send_polls=True,
+                        change_info=True,
+                        invite_users=True,
+                        pin_messages=True,
+                        manage_topics=True,
+                        send_photos=True,
+                        send_videos=True,
+                        send_roundvideos=True,
+                        send_audios=True,
+                        send_voices=True,
+                        send_docs=True,
+                        send_plain=True,
                     )
                 )
             )
