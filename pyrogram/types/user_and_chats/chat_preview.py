@@ -52,7 +52,12 @@ class ChatPreview(Object):
         type: str,
         members_count: int,
         photo: "types.Photo" = None,
-        members: List["types.User"] = None
+        members: List["types.User"] = None,
+        request_needed: bool = None,
+        verified: bool = None,
+        scam: bool = None,
+        fake: bool = None,
+        about: str = None
     ):
         super().__init__(client)
 
@@ -61,6 +66,11 @@ class ChatPreview(Object):
         self.members_count = members_count
         self.photo = photo
         self.members = members
+        self.request_needed = request_needed
+        self.verified = verified
+        self.scam = scam
+        self.fake = fake
+        self.about = about
 
     @staticmethod
     def _parse(client, chat_invite: "raw.types.ChatInvite") -> "ChatPreview":
@@ -72,7 +82,12 @@ class ChatPreview(Object):
             members_count=chat_invite.participants_count,
             photo=types.Photo._parse(client, chat_invite.photo),
             members=[types.User._parse(client, user) for user in chat_invite.participants] or None,
-            client=client
+            client=client,
+            request_needed=chat_invite.request_needed,
+            verified=chat_invite.verified,
+            scam=chat_invite.scam,
+            fake=chat_invite.fake,
+            about=chat_invite.about
         )
 
     # TODO: Maybe just merge this object into Chat itself by adding the "members" field.

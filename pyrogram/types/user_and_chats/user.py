@@ -175,7 +175,11 @@ class User(Object, Update):
         phone_number: str = None,
         photo: "types.ChatPhoto" = None,
         restrictions: List["types.Restriction"] = None,
-        usernames: List["raw.types.Username"] = None
+        usernames: List["raw.types.Username"] = None,
+        close_friend: Optional[bool] = None,
+        stories_hidden: Optional[bool] = None,
+        stories_unavailable: Optional[bool] = None,
+        stories_max_id: Optional[int] = None
     ):
         super().__init__(client)
 
@@ -213,6 +217,10 @@ class User(Object, Update):
         self.photo = photo
         self.restrictions = restrictions
         self.usernames = usernames
+        self.close_friend = close_friend
+        self.stories_hidden = stories_hidden
+        self.stories_unavailable = stories_unavailable
+        self.stories_max_id = stories_max_id
 
     @property
     def mention(self):
@@ -251,7 +259,11 @@ class User(Object, Update):
             photo=types.ChatPhoto._parse(client, user.photo, user.id, user.access_hash),
             restrictions=types.List([types.Restriction._parse(r) for r in user.restriction_reason]) or None,
             client=client,
-            usernames=types.List([types.Username._parse(u) for u in user.usernames]) or None
+            usernames=types.List([types.Username._parse(u) for u in user.usernames]) or None,
+            close_friend=user.close_friend,
+            stories_hidden=user.stories_hidden,
+            stories_unavailable=user.stories_unavailable,
+            stories_max_id=user.stories_max_id,
         )
 
     @staticmethod
