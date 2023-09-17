@@ -42,7 +42,7 @@ class SendPoll:
         is_closed: bool = None,
         disable_notification: bool = None,
         protect_content: bool = None,
-        reply_to_message_id: int = None,
+        reply_to_message_id: int = 0,
         schedule_date: datetime = None,
         reply_markup: Union[
             "types.InlineKeyboardMarkup",
