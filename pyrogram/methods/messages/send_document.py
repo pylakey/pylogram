@@ -42,7 +42,7 @@ class SendDocument:
         file_name: str = None,
         force_document: bool = None,
         disable_notification: bool = None,
-        reply_to_message_id: int = None,
+        reply_to_message_id: int = 0,
         schedule_date: datetime = None,
         protect_content: bool = None,
         reply_markup: Union[

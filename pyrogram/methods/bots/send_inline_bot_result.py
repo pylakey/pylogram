@@ -29,7 +29,7 @@ class SendInlineBotResult:
         query_id: int,
         result_id: str,
         disable_notification: bool = None,
-        reply_to_message_id: int = None
+        reply_to_message_id: int = 0
     ) -> "raw.base.Updates":
         """Send an inline bot result.
         Bot results can be retrieved using :meth:`~pyrogram.Client.get_inline_bot_results`

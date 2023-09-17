@@ -29,7 +29,7 @@ class SendGame:
         chat_id: Union[int, str],
         game_short_name: str,
         disable_notification: bool = None,
-        reply_to_message_id: int = None,
+        reply_to_message_id: int = 0,
         protect_content: bool = None,
         reply_markup: Union[
             "types.InlineKeyboardMarkup",

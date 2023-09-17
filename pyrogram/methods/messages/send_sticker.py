@@ -36,7 +36,7 @@ class SendSticker:
         chat_id: Union[int, str],
         sticker: Union[str, BinaryIO],
         disable_notification: bool = None,
-        reply_to_message_id: int = None,
+        reply_to_message_id: int = 0,
         schedule_date: datetime = None,
         protect_content: bool = None,
         reply_markup: Union[

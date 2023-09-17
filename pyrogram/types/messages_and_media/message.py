@@ -322,7 +322,7 @@ class Message(Object, Update):
         forward_from_message_id: int = None,
         forward_signature: str = None,
         forward_date: datetime = None,
-        reply_to_message_id: int = None,
+        reply_to_message_id: int = 0,
         reply_to_top_message_id: int = None,
         reply_to_message: "Message" = None,
         mentioned: bool = None,
@@ -895,7 +895,7 @@ class Message(Object, Update):
         entities: List["types.MessageEntity"] = None,
         disable_web_page_preview: bool = None,
         disable_notification: bool = None,
-        reply_to_message_id: int = None,
+        reply_to_message_id: int = 0,
         schedule_date: datetime = None,
         protect_content: bool = None,
         reply_markup=None
@@ -1001,7 +1001,7 @@ class Message(Object, Update):
             "types.ReplyKeyboardRemove",
             "types.ForceReply"
         ] = None,
-        reply_to_message_id: int = None,
+        reply_to_message_id: int = 0,
         progress: Callable = None,
         progress_args: tuple = ()
     ) -> "Message":
@@ -1138,7 +1138,7 @@ class Message(Object, Update):
         title: str = None,
         thumb: str = None,
         disable_notification: bool = None,
-        reply_to_message_id: int = None,
+        reply_to_message_id: int = 0,
         reply_markup: Union[
             "types.InlineKeyboardMarkup",
             "types.ReplyKeyboardMarkup",
@@ -1273,7 +1273,7 @@ class Message(Object, Update):
         parse_mode: Optional["enums.ParseMode"] = None,
         caption_entities: List["types.MessageEntity"] = None,
         disable_notification: bool = None,
-        reply_to_message_id: int = None,
+        reply_to_message_id: int = 0,
         reply_markup: Union[
             "types.InlineKeyboardMarkup",
             "types.ReplyKeyboardMarkup",
@@ -1396,7 +1396,7 @@ class Message(Object, Update):
         last_name: str = "",
         vcard: str = "",
         disable_notification: bool = None,
-        reply_to_message_id: int = None,
+        reply_to_message_id: int = 0,
         reply_markup: Union[
             "types.InlineKeyboardMarkup",
             "types.ReplyKeyboardMarkup",
@@ -1484,7 +1484,7 @@ class Message(Object, Update):
         file_name: str = None,
         force_document: bool = None,
         disable_notification: bool = None,
-        reply_to_message_id: int = None,
+        reply_to_message_id: int = 0,
         schedule_date: datetime = None,
         reply_markup: Union[
             "types.InlineKeyboardMarkup",
@@ -1620,7 +1620,7 @@ class Message(Object, Update):
         game_short_name: str,
         quote: bool = None,
         disable_notification: bool = None,
-        reply_to_message_id: int = None,
+        reply_to_message_id: int = 0,
         reply_markup: Union[
             "types.InlineKeyboardMarkup",
             "types.ReplyKeyboardMarkup",
@@ -1690,7 +1690,7 @@ class Message(Object, Update):
         result_id: str,
         quote: bool = None,
         disable_notification: bool = None,
-        reply_to_message_id: int = None
+        reply_to_message_id: int = 0
     ) -> "Message":
         """Bound method *reply_inline_bot_result* of :obj:`~pyrogram.types.Message`.
 
@@ -1754,7 +1754,7 @@ class Message(Object, Update):
         longitude: float,
         quote: bool = None,
         disable_notification: bool = None,
-        reply_to_message_id: int = None,
+        reply_to_message_id: int = 0,
         reply_markup: Union[
             "types.InlineKeyboardMarkup",
             "types.ReplyKeyboardMarkup",
@@ -1828,7 +1828,7 @@ class Message(Object, Update):
         media: List[Union["types.InputMediaPhoto", "types.InputMediaVideo"]],
         quote: bool = None,
         disable_notification: bool = None,
-        reply_to_message_id: int = None
+        reply_to_message_id: int = 0
     ) -> List["types.Message"]:
         """Bound method *reply_media_group* of :obj:`~pyrogram.types.Message`.
 
@@ -1894,7 +1894,7 @@ class Message(Object, Update):
         has_spoiler: bool = None,
         ttl_seconds: int = None,
         disable_notification: bool = None,
-        reply_to_message_id: int = None,
+        reply_to_message_id: int = 0,
         reply_markup: Union[
             "types.InlineKeyboardMarkup",
             "types.ReplyKeyboardMarkup",
@@ -2029,7 +2029,7 @@ class Message(Object, Update):
         quote: bool = None,
         disable_notification: bool = None,
         protect_content: bool = None,
-        reply_to_message_id: int = None,
+        reply_to_message_id: int = 0,
         schedule_date: datetime = None,
         reply_markup: Union[
             "types.InlineKeyboardMarkup",
@@ -2162,7 +2162,7 @@ class Message(Object, Update):
         sticker: Union[str, BinaryIO],
         quote: bool = None,
         disable_notification: bool = None,
-        reply_to_message_id: int = None,
+        reply_to_message_id: int = 0,
         reply_markup: Union[
             "types.InlineKeyboardMarkup",
             "types.ReplyKeyboardMarkup",
@@ -2267,7 +2267,7 @@ class Message(Object, Update):
         foursquare_id: str = "",
         foursquare_type: str = "",
         disable_notification: bool = None,
-        reply_to_message_id: int = None,
+        reply_to_message_id: int = 0,
         reply_markup: Union[
             "types.InlineKeyboardMarkup",
             "types.ReplyKeyboardMarkup",
@@ -2370,7 +2370,7 @@ class Message(Object, Update):
         thumb: str = None,
         supports_streaming: bool = True,
         disable_notification: bool = None,
-        reply_to_message_id: int = None,
+        reply_to_message_id: int = 0,
         reply_markup: Union[
             "types.InlineKeyboardMarkup",
             "types.ReplyKeyboardMarkup",
@@ -2519,7 +2519,7 @@ class Message(Object, Update):
         length: int = 1,
         thumb: str = None,
         disable_notification: bool = None,
-        reply_to_message_id: int = None,
+        reply_to_message_id: int = 0,
         reply_markup: Union[
             "types.InlineKeyboardMarkup",
             "types.ReplyKeyboardMarkup",
@@ -2638,7 +2638,7 @@ class Message(Object, Update):
         caption_entities: List["types.MessageEntity"] = None,
         duration: int = 0,
         disable_notification: bool = None,
-        reply_to_message_id: int = None,
+        reply_to_message_id: int = 0,
         reply_markup: Union[
             "types.InlineKeyboardMarkup",
             "types.ReplyKeyboardMarkup",
@@ -2999,7 +2999,7 @@ class Message(Object, Update):
         parse_mode: Optional["enums.ParseMode"] = None,
         caption_entities: List["types.MessageEntity"] = None,
         disable_notification: bool = None,
-        reply_to_message_id: int = None,
+        reply_to_message_id: int = 0,
         schedule_date: datetime = None,
         protect_content: bool = None,
         reply_markup: Union[

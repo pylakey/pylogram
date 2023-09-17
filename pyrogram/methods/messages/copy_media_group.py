@@ -31,7 +31,7 @@ class CopyMediaGroup:
         message_id: int,
         captions: Union[List[str], str] = None,
         disable_notification: bool = None,
-        reply_to_message_id: int = None,
+        reply_to_message_id: int = 0,
         schedule_date: datetime = None,
     ) -> List["types.Message"]:
         """Copy a media group by providing one of the message ids.

@@ -34,7 +34,7 @@ class SendCachedMedia:
         parse_mode: Optional["enums.ParseMode"] = None,
         caption_entities: List["types.MessageEntity"] = None,
         disable_notification: bool = None,
-        reply_to_message_id: int = None,
+        reply_to_message_id: int = 0,
         schedule_date: datetime = None,
         protect_content: bool = None,
         reply_markup: Union[
