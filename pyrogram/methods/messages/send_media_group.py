@@ -397,7 +397,7 @@ class SendMediaGroup:
                 silent=disable_notification or None,
                 reply_to=raw.types.InputReplyToMessage(
                     reply_to_msg_id=reply_to_message_id
-                ),
+                ) if bool(reply_to_message_id) else None,
                 schedule_date=utils.datetime_to_timestamp(schedule_date),
                 noforwards=protect_content
             ),
