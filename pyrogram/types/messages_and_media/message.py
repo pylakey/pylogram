@@ -29,6 +29,7 @@ from pyrogram.errors import MessageIdsEmpty, PeerIdInvalid
 from pyrogram.parser import utils as parser_utils, Parser
 from ..object import Object
 from ..update import Update
+from ...raw.types import MessageReplyHeader
 
 log = logging.getLogger(__name__)
 
@@ -257,7 +258,7 @@ class Message(Object, Update):
 
         views (``int``, *optional*):
             Channel post views.
-	    
+
 	forwards (``int``, *optional*):
             Channel post forwards.
 
@@ -823,7 +824,7 @@ class Message(Object, Update):
                 client=client
             )
 
-            if message.reply_to:
+            if isinstance(message.reply_to, MessageReplyHeader):
                 parsed_message.reply_to_message_id = message.reply_to.reply_to_msg_id
                 parsed_message.reply_to_top_message_id = message.reply_to.reply_to_top_id
 
