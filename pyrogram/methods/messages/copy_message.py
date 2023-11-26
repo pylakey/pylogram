@@ -21,6 +21,7 @@ from datetime import datetime
 from typing import Union, List, Optional
 
 import pyrogram
+from pyrogram import raw
 from pyrogram import types, enums
 
 log = logging.getLogger(__name__)
@@ -36,7 +37,7 @@ class CopyMessage:
         parse_mode: Optional["enums.ParseMode"] = None,
         caption_entities: List["types.MessageEntity"] = None,
         disable_notification: bool = None,
-        reply_to_message_id: int = 0,
+        reply_to: Union[int, raw.types.InputReplyToMessage] = None,
         schedule_date: datetime = None,
         protect_content: bool = None,
         reply_markup: Union[
@@ -83,7 +84,7 @@ class CopyMessage:
                 Sends the message silently.
                 Users will receive a notification with no sound.
 
-            reply_to_message_id (``int``, *optional*):
+            reply_to (``int``, *optional*):
                 If the message is a reply, ID of the original message.
 
             schedule_date (:py:obj:`~datetime.datetime`, *optional*):
@@ -114,7 +115,7 @@ class CopyMessage:
             parse_mode=parse_mode,
             caption_entities=caption_entities,
             disable_notification=disable_notification,
-            reply_to_message_id=reply_to_message_id,
+            reply_to=reply_to,
             schedule_date=schedule_date,
             protect_content=protect_content,
             reply_markup=reply_markup

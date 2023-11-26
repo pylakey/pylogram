@@ -34,7 +34,7 @@ class SendCachedMedia:
         parse_mode: Optional["enums.ParseMode"] = None,
         caption_entities: List["types.MessageEntity"] = None,
         disable_notification: bool = None,
-        reply_to_message_id: int = 0,
+        reply_to: Union[int, raw.types.InputReplyToMessage] = None,
         schedule_date: datetime = None,
         protect_content: bool = None,
         reply_markup: Union[
@@ -76,7 +76,7 @@ class SendCachedMedia:
                 Sends the message silently.
                 Users will receive a notification with no sound.
 
-            reply_to_message_id (``int``, *optional*):
+            reply_to (``int``, *optional*):
                 If the message is a reply, ID of the original message.
 
             schedule_date (:py:obj:`~datetime.datetime`, *optional*):
@@ -104,8 +104,8 @@ class SendCachedMedia:
                 media=utils.get_input_media_from_file_id(file_id),
                 silent=disable_notification or None,
                 reply_to=raw.types.InputReplyToMessage(
-                    reply_to_msg_id=reply_to_message_id
-                ) if bool(reply_to_message_id) else None,
+                    reply_to_msg_id=reply_to
+                ) if isinstance(reply_to, int) else reply_to,
                 random_id=self.rnd_id(),
                 schedule_date=utils.datetime_to_timestamp(schedule_date),
                 noforwards=protect_content,

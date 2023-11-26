@@ -29,7 +29,7 @@ class SendInlineBotResult:
         query_id: int,
         result_id: str,
         disable_notification: bool = None,
-        reply_to_message_id: int = 0
+        reply_to: Union[int, raw.types.InputReplyToMessage] = None,
     ) -> "raw.base.Updates":
         """Send an inline bot result.
         Bot results can be retrieved using :meth:`~pyrogram.Client.get_inline_bot_results`
@@ -52,7 +52,7 @@ class SendInlineBotResult:
                 Sends the message silently.
                 Users will receive a notification with no sound.
 
-            reply_to_message_id (``bool``, *optional*):
+            reply_to (``bool``, *optional*):
                 If the message is a reply, ID of the original message.
 
         Returns:
@@ -71,7 +71,7 @@ class SendInlineBotResult:
                 random_id=self.rnd_id(),
                 silent=disable_notification or None,
                 reply_to=raw.types.InputReplyToMessage(
-                    reply_to_msg_id=reply_to_message_id
-                ) if bool(reply_to_message_id) else None,
+                    reply_to_msg_id=reply_to
+                ) if isinstance(reply_to, int) else reply_to,
             )
         )

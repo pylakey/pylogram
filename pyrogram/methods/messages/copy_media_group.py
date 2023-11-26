@@ -31,7 +31,7 @@ class CopyMediaGroup:
         message_id: int,
         captions: Union[List[str], str] = None,
         disable_notification: bool = None,
-        reply_to_message_id: int = 0,
+        reply_to: Union[int, raw.types.InputReplyToMessage] = None,
         schedule_date: datetime = None,
     ) -> List["types.Message"]:
         """Copy a media group by providing one of the message ids.
@@ -65,7 +65,7 @@ class CopyMediaGroup:
                 Sends the message silently.
                 Users will receive a notification with no sound.
 
-            reply_to_message_id (``int``, *optional*):
+            reply_to (``int``, *optional*):
                 If the message is a reply, ID of the original message.
 
             schedule_date (:py:obj:`~datetime.datetime`, *optional*):
@@ -120,8 +120,8 @@ class CopyMediaGroup:
                 multi_media=multi_media,
                 silent=disable_notification or None,
                 reply_to=raw.types.InputReplyToMessage(
-                    reply_to_msg_id=reply_to_message_id
-                ) if bool(reply_to_message_id) else None,
+                    reply_to_msg_id=reply_to
+                ) if isinstance(reply_to, int) else reply_to,
                 schedule_date=utils.datetime_to_timestamp(schedule_date)
             ),
             sleep_threshold=60
