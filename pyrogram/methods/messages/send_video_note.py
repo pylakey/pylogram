@@ -38,7 +38,7 @@ class SendVideoNote:
         length: int = 1,
         thumb: Union[str, BinaryIO] = None,
         disable_notification: bool = None,
-        reply_to: Union[int, raw.types.InputReplyToMessage] = None,
+        reply_to: Union[int, raw.types.InputReplyToMessage, raw.types.InputReplyToStory] = None,
         schedule_date: datetime = None,
         protect_content: bool = None,
         reply_markup: Union[

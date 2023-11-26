@@ -40,7 +40,7 @@ class SendVoice:
         caption_entities: List["types.MessageEntity"] = None,
         duration: int = 0,
         disable_notification: bool = None,
-        reply_to: Union[int, raw.types.InputReplyToMessage] = None,
+        reply_to: Union[int, raw.types.InputReplyToMessage, raw.types.InputReplyToStory] = None,
         schedule_date: datetime = None,
         protect_content: bool = None,
         reply_markup: Union[

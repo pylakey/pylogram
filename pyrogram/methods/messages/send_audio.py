@@ -44,7 +44,7 @@ class SendAudio:
         thumb: Union[str, BinaryIO] = None,
         file_name: str = None,
         disable_notification: bool = None,
-        reply_to: Union[int, raw.types.InputReplyToMessage] = None,
+        reply_to: Union[int, raw.types.InputReplyToMessage, raw.types.InputReplyToStory] = None,
         schedule_date: datetime = None,
         protect_content: bool = None,
         reply_markup: Union[

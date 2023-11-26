@@ -42,7 +42,7 @@ class SendPoll:
         is_closed: bool = None,
         disable_notification: bool = None,
         protect_content: bool = None,
-        reply_to: Union[int, raw.types.InputReplyToMessage] = None,
+        reply_to: Union[int, raw.types.InputReplyToMessage, raw.types.InputReplyToStory] = None,
         schedule_date: datetime = None,
         reply_markup: Union[
             "types.InlineKeyboardMarkup",
