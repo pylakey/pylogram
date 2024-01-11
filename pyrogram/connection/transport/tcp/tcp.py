@@ -101,7 +101,14 @@ class TCP:
         if isinstance(self.proxy, (tuple, list)):
             parsed = self._parse_proxy(*self.proxy)
         elif isinstance(self.proxy, dict):
-            parsed = self._parse_proxy(**self.proxy)
+            parsed = self._parse_proxy(
+                scheme=self.proxy.get('scheme'),
+                hostname=self.proxy.get('hostname'),
+                port=self.proxy.get('port'),
+                rdns=self.proxy.get('rdns', True),
+                username=self.proxy.get('username'),
+                password=self.proxy.get('password'),
+            )
         else:
             raise TypeError("Proxy of unknown format: {}".format(type(self.proxy)))
 
