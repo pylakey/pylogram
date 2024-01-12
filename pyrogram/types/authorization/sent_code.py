@@ -15,9 +15,22 @@
 #
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with Pyrogram.  If not, see <http://www.gnu.org/licenses/>.
+import typing
 
-from pyrogram import raw, enums
+from pyrogram import enums
+from pyrogram import raw
 from ..object import Object
+
+sent_code_descriptions = {
+    enums.SentCodeType.APP: "Telegram app",
+    enums.SentCodeType.SMS: "SMS",
+    enums.SentCodeType.CALL: "phone call",
+    enums.SentCodeType.FLASH_CALL: "phone flash call",
+    enums.SentCodeType.FRAGMENT_SMS: "Fragment SMS",
+    enums.SentCodeType.EMAIL_CODE: "email code",
+    enums.SentCodeType.MISSED_CALL: "phone missed call",
+    enums.SentCodeType.SETUP_EMAIL_REQUIRED: "Email required to protect account",
+}
 
 
 class SentCode(Object):
@@ -39,11 +52,11 @@ class SentCode(Object):
     """
 
     def __init__(
-        self, *,
-        type: "enums.SentCodeType",
-        phone_code_hash: str,
-        next_type: "enums.NextCodeType" = None,
-        timeout: int = None
+            self, *,
+            type: "enums.SentCodeType",
+            phone_code_hash: str,
+            next_type: "enums.NextCodeType" = None,
+            timeout: int = None
     ):
         super().__init__()
 
@@ -60,3 +73,7 @@ class SentCode(Object):
             next_type=enums.NextCodeType(type(sent_code.next_type)) if sent_code.next_type else None,
             timeout=sent_code.timeout
         )
+
+    @property
+    def description(self) -> typing.Optional[str]:
+        return sent_code_descriptions.get(self.type)
