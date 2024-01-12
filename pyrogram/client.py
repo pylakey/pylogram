@@ -26,34 +26,45 @@ import re
 import shutil
 import sys
 from concurrent.futures.thread import ThreadPoolExecutor
-from datetime import datetime, timedelta
+from datetime import datetime
+from datetime import timedelta
 from hashlib import sha256
 from importlib import import_module
-from io import StringIO, BytesIO
+from io import BytesIO
+from io import StringIO
 from mimetypes import MimeTypes
 from pathlib import Path
-from typing import Union, List, Optional, Callable, AsyncGenerator
+from typing import AsyncGenerator
+from typing import Callable
+from typing import List
+from typing import Optional
+from typing import Union
 
 import pyrogram
-from pyrogram import __version__, __license__
+from pyrogram import (
+    __version__,
+)
 from pyrogram import enums
 from pyrogram import raw
 from pyrogram import utils
 from pyrogram.crypto import aes
-from pyrogram.errors import (
-    SessionPasswordNeeded,
-    VolumeLocNotFound, ChannelPrivate,
-    BadRequest
-)
 from pyrogram.errors import CDNFileHashMismatch
+from pyrogram.errors import ChannelPrivate
+from pyrogram.errors import SessionPasswordNeeded
+from pyrogram.errors import VolumeLocNotFound
 from pyrogram.handlers.handler import Handler
 from pyrogram.methods import Methods
-from pyrogram.session import Auth, Session
-from pyrogram.storage import FileStorage, MemoryStorage
-from pyrogram.types import User, TermsOfService
+from pyrogram.session import Auth
+from pyrogram.session import Session
+from pyrogram.storage import FileStorage
+from pyrogram.storage import MemoryStorage
+from pyrogram.types import TermsOfService
+from pyrogram.types import User
 from pyrogram.utils import ainput
 from .dispatcher import Dispatcher
-from .file_id import FileId, FileType, ThumbnailSource
+from .file_id import FileId
+from .file_id import FileType
+from .file_id import ThumbnailSource
 from .mime_types import mime_types
 from .parser import Parser
 from .session.internals import MsgId
@@ -201,36 +212,38 @@ class Client(Methods):
     mimetypes.readfp(StringIO(mime_types))
 
     def __init__(
-        self,
-        name: str,
-        api_id: Union[int, str] = None,
-        api_hash: str = None,
-        app_version: str = APP_VERSION,
-        device_model: str = DEVICE_MODEL,
-        system_version: str = SYSTEM_VERSION,
-        system_lang_code: str = SYSTEM_LANG_CODE,
-        lang_code: str = LANG_CODE,
-        lang_pack: str = "",
-        ipv6: bool = False,
-        proxy: dict = None,
-        test_mode: bool = False,
-        bot_token: str = None,
-        session_string: str = None,
-        in_memory: bool = None,
-        phone_number: str = None,
-        phone_code: str = None,
-        password: str = None,
-        workers: int = WORKERS,
-        workdir: str = WORKDIR,
-        plugins: dict = None,
-        parse_mode: "enums.ParseMode" = enums.ParseMode.DEFAULT,
-        no_updates: bool = None,
-        takeout: bool = None,
-        sleep_threshold: int = Session.SLEEP_THRESHOLD,
-        hide_password: bool = False,
-        max_concurrent_transmissions: int = MAX_CONCURRENT_TRANSMISSIONS,
-        ignore_channel_updates_except: List[int] = None,
-        message_cache_size: int = 10000,
+            self,
+            name: str,
+            api_id: Union[int, str] = None,
+            api_hash: str = None,
+            app_version: str = APP_VERSION,
+            device_model: str = DEVICE_MODEL,
+            system_version: str = SYSTEM_VERSION,
+            system_lang_code: str = SYSTEM_LANG_CODE,
+            lang_code: str = LANG_CODE,
+            lang_pack: str = "",
+            ipv6: bool = False,
+            proxy: dict = None,
+            test_mode: bool = False,
+            bot_token: str = None,
+            session_string: str = None,
+            in_memory: bool = None,
+            phone_number: str = None,
+            phone_code: str = None,
+            password: str = None,
+            workers: int = WORKERS,
+            workdir: str = WORKDIR,
+            plugins: dict = None,
+            parse_mode: "enums.ParseMode" = enums.ParseMode.DEFAULT,
+            no_updates: bool = None,
+            takeout: bool = None,
+            sleep_threshold: int = Session.SLEEP_THRESHOLD,
+            hide_password: bool = False,
+            max_concurrent_transmissions: int = MAX_CONCURRENT_TRANSMISSIONS,
+            ignore_channel_updates_except: List[int] = None,
+            message_cache_size: int = 10000,
+            first_name: str = None,
+            last_name: str = None,
     ):
         super().__init__()
 
@@ -252,6 +265,8 @@ class Client(Methods):
         self.phone_number = phone_number
         self.phone_code = phone_code
         self.password = password
+        self.first_name = first_name
+        self.last_name = last_name
         self.workers = workers
         self.workdir = Path(workdir)
         self.plugins = plugins
@@ -337,119 +352,94 @@ class Client(Methods):
             if datetime.now() - self.last_update_time > timedelta(seconds=self.UPDATES_WATCHDOG_INTERVAL):
                 await self.invoke(raw.functions.updates.GetState())
 
+    async def fetch_phone_number(self) -> str:
+        phone_number = self.phone_number
+
+        if not bool(phone_number):
+            phone_number = await ainput("Enter phone number: ")
+
+        if not bool(phone_number):
+            raise RuntimeError("The phone number or bot token required for new authorizations")
+
+        phone_number = re.sub(r"\D", "", phone_number)
+
+        return phone_number
+
+    async def fetch_phone_code(self) -> str:
+        phone_code = self.phone_code
+
+        if not bool(phone_code):
+            phone_code = await ainput("Enter confirmation code: ")
+
+        if not bool(phone_code):
+            raise RuntimeError("The auth code required for signing in")
+
+        phone_code = re.sub(r"\D", "", phone_code)
+
+        return phone_code
+
+    async def fetch_password(self, hint: str = None) -> str:
+        password = self.password
+
+        if not bool(password):
+            password = await ainput(
+                f"Enter password (empty to recover). Hint: {hint}: ",
+                hide=self.hide_password
+            )
+
+        return password
+
+    async def fetch_first_name(self) -> str:
+        first_name = self.first_name
+
+        if not bool(first_name):
+            first_name = await ainput(f"Enter first name: ")
+
+        if not bool(first_name):
+            raise RuntimeError("The first name required for new authorizations")
+
+        return first_name
+
+    async def fetch_last_name(self) -> str:
+        last_name = self.last_name
+
+        if not bool(last_name):
+            last_name = await ainput(f"Enter first name: ")
+
+        return last_name
+
     async def authorize(self) -> User:
         if self.bot_token:
             return await self.sign_in_bot(self.bot_token)
 
-        print(f"Welcome to Pyrogram (version {__version__})")
-        print(f"Pyrogram is free software and comes with ABSOLUTELY NO WARRANTY. Licensed\n"
-              f"under the terms of the {__license__}.\n")
+        phone_number = await self.fetch_phone_number()
+        sent_code = await self.send_code(phone_number)
+        log.debug(f"The confirmation code for {phone_number} has been sent via {sent_code.description}")
+        phone_code = await self.fetch_phone_code()
 
-        while True:
-            try:
-                if not self.phone_number:
-                    while True:
-                        value = await ainput("Enter phone number or bot token: ")
+        try:
+            signed_in = await self.sign_in(self.phone_number, sent_code.phone_code_hash, phone_code)
+        except SessionPasswordNeeded as e:
+            log.info(e.MESSAGE)
+            password_info = await self.invoke(raw.functions.account.GetPassword())
+            password = await self.fetch_password(password_info.hint)
 
-                        if not value:
-                            continue
+            if not bool(password):
+                raise
 
-                        confirm = (await ainput(f'Is "{value}" correct? (y/N): ')).lower()
-
-                        if confirm == "y":
-                            break
-
-                    if ":" in value:
-                        self.bot_token = value
-                        return await self.sign_in_bot(value)
-                    else:
-                        self.phone_number = value
-
-                sent_code = await self.send_code(self.phone_number)
-            except BadRequest as e:
-                print(e.MESSAGE)
-                self.phone_number = None
-                self.bot_token = None
-            else:
-                break
-
-        sent_code_descriptions = {
-            enums.SentCodeType.APP: "Telegram app",
-            enums.SentCodeType.SMS: "SMS",
-            enums.SentCodeType.CALL: "phone call",
-            enums.SentCodeType.FLASH_CALL: "phone flash call",
-            enums.SentCodeType.FRAGMENT_SMS: "Fragment SMS",
-            enums.SentCodeType.EMAIL_CODE: "email code",
-            enums.SentCodeType.MISSED_CALL: "phone missed call",
-            enums.SentCodeType.SETUP_EMAIL_REQUIRED: "Email required to protect account",
-        }
-
-        print(f"The confirmation code has been sent via {sent_code_descriptions[sent_code.type]}")
-
-        while True:
-            if not self.phone_code:
-                self.phone_code = await ainput("Enter confirmation code: ")
-
-            try:
-                signed_in = await self.sign_in(self.phone_number, sent_code.phone_code_hash, self.phone_code)
-            except BadRequest as e:
-                print(e.MESSAGE)
-                self.phone_code = None
-            except SessionPasswordNeeded as e:
-                print(e.MESSAGE)
-
-                while True:
-                    print("Password hint: {}".format(await self.get_password_hint()))
-
-                    if not self.password:
-                        self.password = await ainput("Enter password (empty to recover): ", hide=self.hide_password)
-
-                    try:
-                        if not self.password:
-                            confirm = await ainput("Confirm password recovery (y/n): ")
-
-                            if confirm == "y":
-                                email_pattern = await self.send_recovery_code()
-                                print(f"The recovery code has been sent to {email_pattern}")
-
-                                while True:
-                                    recovery_code = await ainput("Enter recovery code: ")
-
-                                    try:
-                                        return await self.recover_password(recovery_code)
-                                    except BadRequest as e:
-                                        print(e.MESSAGE)
-                                    except Exception as e:
-                                        log.exception(e)
-                                        raise
-                            else:
-                                self.password = None
-                        else:
-                            return await self.check_password(self.password)
-                    except BadRequest as e:
-                        print(e.MESSAGE)
-                        self.password = None
-            else:
-                break
+            return await self.check_password(password, password_info=password_info)
 
         if isinstance(signed_in, User):
             return signed_in
 
-        while True:
-            first_name = await ainput("Enter first name: ")
-            last_name = await ainput("Enter last name (empty to skip): ")
-
-            try:
-                signed_up = await self.sign_up(
-                    self.phone_number,
-                    sent_code.phone_code_hash,
-                    first_name,
-                    last_name
-                )
-            except BadRequest as e:
-                print(e.MESSAGE)
-            else:
-                break
+        first_name = await self.fetch_first_name()
+        last_name = await self.fetch_last_name()
+        signed_up = await self.sign_up(
+            self.phone_number,
+            sent_code.phone_code_hash,
+            first_name,
+            last_name or ""
+        )
 
         if isinstance(signed_in, TermsOfService):
             print("\n" + signed_in.text + "\n")
@@ -831,13 +821,13 @@ class Client(Methods):
                 return file_path
 
     async def get_file(
-        self,
-        file_id: FileId,
-        file_size: int = 0,
-        limit: int = 0,
-        offset: int = 0,
-        progress: Callable = None,
-        progress_args: tuple = ()
+            self,
+            file_id: FileId,
+            file_size: int = 0,
+            limit: int = 0,
+            offset: int = 0,
+            progress: Callable = None,
+            progress_args: tuple = ()
     ) -> Optional[AsyncGenerator[bytes, None]]:
         async with self.get_file_semaphore:
             file_type = file_id.file_type

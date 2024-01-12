@@ -28,14 +28,17 @@ log = logging.getLogger(__name__)
 
 class CheckPassword:
     async def check_password(
-        self: "pyrogram.Client",
-        password: str
+            self: "pyrogram.Client",
+            password: str,
+            *,
+            password_info: raw.types.account.Password = None
     ) -> "types.User":
         """Check your Two-Step Verification password and log in.
 
         .. include:: /_includes/usable-by/users.rst
 
         Parameters:
+            password_info ():
             password (``str``):
                 Your Two-Step Verification password.
 
@@ -45,12 +48,13 @@ class CheckPassword:
         Raises:
             BadRequest: In case the password is invalid.
         """
+
+        if not isinstance(password_info, raw.types.account.Password):
+            password_info = await self.invoke(raw.functions.account.GetPassword())
+
         r = await self.invoke(
             raw.functions.auth.CheckPassword(
-                password=compute_password_check(
-                    await self.invoke(raw.functions.account.GetPassword()),
-                    password
-                )
+                password=compute_password_check(password_info, password)
             )
         )
 
