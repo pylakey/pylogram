@@ -77,17 +77,6 @@ class SaveFile:
                 You can pass anything you need to be available in the progress callback scope; for example, a Message
                 object or a Client instance in order to edit the message with the updated progress status.
 
-        Other Parameters:
-            current (``int``):
-                The amount of bytes transmitted so far.
-
-            total (``int``):
-                The total size of the file.
-
-            *args (``tuple``, *optional*):
-                Extra custom arguments as defined in the ``progress_args`` parameter.
-                You can either keep ``*args`` or add every single extra argument in your function signature.
-
         Returns:
             ``InputFile``: On success, the uploaded file is returned in form of an InputFile object.
 
@@ -98,7 +87,7 @@ class SaveFile:
             if path is None:
                 return None
 
-            async def worker(session):
+            async def worker(_session):
                 while True:
                     data = await queue.get()
 
@@ -106,9 +95,9 @@ class SaveFile:
                         return
 
                     try:
-                        await session.invoke(data)
-                    except Exception as e:
-                        log.exception(e)
+                        await _session.invoke(data)
+                    except Exception as _e:
+                        log.exception(_e)
 
             part_size = 512 * 1024
 

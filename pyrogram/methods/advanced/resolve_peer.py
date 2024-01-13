@@ -55,7 +55,11 @@ class ResolvePeer:
         Raises:
             KeyError: In case the peer doesn't exist in the internal database.
         """
+
+        # TODO: Add support for resolving peer by phone number
+
         if not self.is_connected:
+            # TODO: raise peer not found in storage file
             raise ConnectionError("Client has not been started yet")
 
         try:
