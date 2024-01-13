@@ -16,7 +16,7 @@ docs/source/telegram
 docs/source/api/methods/
 docs/source/api/bound-methods/
 docs/source/api/types/
-
+./sessions/
 # PyCharm stuff
 .idea/
 
