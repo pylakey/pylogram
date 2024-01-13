@@ -394,7 +394,7 @@ class Session:
                     raise
 
                 log.warning('[%s] Waiting for %s seconds before continuing (required by "%s")',
-                            self.client.name, amount, query_name)
+                            self.client.session_name, amount, query_name)
 
                 await asyncio.sleep(amount)
             except (OSError, InternalServerError, ServiceUnavailable) as e:

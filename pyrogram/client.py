@@ -24,7 +24,6 @@ import os
 import platform
 import re
 import shutil
-import sys
 from concurrent.futures.thread import ThreadPoolExecutor
 from datetime import datetime
 from datetime import timedelta
@@ -41,9 +40,7 @@ from typing import Optional
 from typing import Union
 
 import pyrogram
-from pyrogram import (
-    __version__,
-)
+from pyrogram import __version__
 from pyrogram import enums
 from pyrogram import raw
 from pyrogram import utils
@@ -68,6 +65,7 @@ from .file_id import ThumbnailSource
 from .mime_types import mime_types
 from .parser import Parser
 from .session.internals import MsgId
+from .storage import Storage
 
 log = logging.getLogger(__name__)
 
@@ -76,7 +74,7 @@ class Client(Methods):
     """Pyrogram Client, the main means for interacting with Telegram.
 
     Parameters:
-        name (``str``):
+        session_name (``str``):
             A name for the client, e.g.: "my_account".
 
         api_id (``int`` | ``str``, *optional*):
@@ -193,19 +191,14 @@ class Client(Methods):
     APP_VERSION = f"Pyrogram {__version__}"
     DEVICE_MODEL = f"{platform.python_implementation()} {platform.python_version()}"
     SYSTEM_VERSION = f"{platform.system()} {platform.release()}"
-
     LANG_CODE = "en"
     SYSTEM_LANG_CODE = "en-US"
-
-    PARENT_DIR = Path(sys.argv[0]).parent
-
-    INVITE_LINK_RE = re.compile(r"^(?:https?://)?(?:www\.)?(?:t(?:elegram)?\.(?:org|me|dog)/(?:joinchat/|\+))([\w-]+)$")
-    WORKERS = min(32, (os.cpu_count() or 0) + 4)  # os.cpu_count() can be None
-    WORKDIR = PARENT_DIR
-
+    PARENT_DIR = Path.cwd().parent
+    INVITE_LINK_RE = re.compile(r"^(?:https?://)?(?:www\.)?t(?:elegram)?\.(?:org|me|dog)/(?:joinchat/|\+)([\w-]+)$")
+    WORKERS = min(8, (os.cpu_count() or 0) + 4)  # os.cpu_count() can be None
+    DEFAULT_WORKDIR = PARENT_DIR
     # Interval of seconds in which the updates watchdog will kick in
     UPDATES_WATCHDOG_INTERVAL = 5 * 60
-
     MAX_CONCURRENT_TRANSMISSIONS = 1
 
     mimetypes = MimeTypes()
@@ -213,7 +206,9 @@ class Client(Methods):
 
     def __init__(
             self,
-            name: str,
+            session_name: str,
+            *,
+            session_storage: Optional[Storage] = None,
             api_id: Union[int, str] = None,
             api_hash: str = None,
             app_version: str = APP_VERSION,
@@ -232,9 +227,9 @@ class Client(Methods):
             phone_code: str = None,
             password: str = None,
             workers: int = WORKERS,
-            workdir: str = WORKDIR,
+            workdir: str = DEFAULT_WORKDIR,
             plugins: dict = None,
-            parse_mode: "enums.ParseMode" = enums.ParseMode.DEFAULT,
+            parse_mode: "enums.ParseMode" = enums.ParseMode.HTML,
             no_updates: bool = None,
             takeout: bool = None,
             sleep_threshold: int = Session.SLEEP_THRESHOLD,
@@ -247,7 +242,7 @@ class Client(Methods):
     ):
         super().__init__()
 
-        self.name = name
+        self.session_name = session_name
         self.api_id = int(api_id) if api_id else None
         self.api_hash = api_hash
         self.app_version = app_version
@@ -279,36 +274,29 @@ class Client(Methods):
 
         self.executor = ThreadPoolExecutor(self.workers, thread_name_prefix="Handler")
 
-        if self.session_string:
-            self.storage = MemoryStorage(self.name, self.session_string)
-        elif self.in_memory:
-            self.storage = MemoryStorage(self.name)
+        if isinstance(session_storage, Storage):
+            self.storage = session_storage
         else:
-            self.storage = FileStorage(self.name, self.workdir)
+            if self.session_string:
+                self.storage = MemoryStorage(self.session_name, self.session_string)
+            elif self.in_memory:
+                self.storage = MemoryStorage(self.session_name)
+            else:
+                self.storage = FileStorage(self.session_name, self.workdir)
 
         self.dispatcher = Dispatcher(self)
-
         self.rnd_id = MsgId
-
         self.parser = Parser(self)
-
         self.session = None
-
         self.media_sessions = {}
         self.media_sessions_lock = asyncio.Lock()
-
         self.save_file_semaphore = asyncio.Semaphore(self.max_concurrent_transmissions)
         self.get_file_semaphore = asyncio.Semaphore(self.max_concurrent_transmissions)
-
         self.is_connected = None
         self.is_initialized = None
-
         self.takeout_id = None
-
         self.disconnect_handler = None
-
         self.me: Optional[User] = None
-
         self.message_cache = Cache(message_cache_size)
 
         # Sometimes, for some reason, the server will stop sending updates and will only respond to pings.
@@ -317,9 +305,7 @@ class Client(Methods):
         self.updates_watchdog_task = None
         self.updates_watchdog_event = asyncio.Event()
         self.last_update_time = datetime.now()
-
         self.loop = asyncio.get_event_loop()
-
         self.ignore_channel_updates_except = ignore_channel_updates_except
 
     def __enter__(self):
@@ -631,44 +617,30 @@ class Client(Methods):
 
         if session_empty:
             if not self.api_id or not self.api_hash:
-                raise AttributeError("The API key is required for new authorizations. "
-                                     "More info: https://docs.pyrogram.org/start/auth")
+                raise AttributeError(
+                    "The API key is required for new authorizations. "
+                    "More info: https://docs.pyrogram.org/start/auth"
+                )
 
             await self.storage.api_id(self.api_id)
-
             await self.storage.dc_id(2)
             await self.storage.date(0)
-
             await self.storage.test_mode(self.test_mode)
             await self.storage.auth_key(
                 await Auth(
-                    self, await self.storage.dc_id(),
+                    self,
+                    await self.storage.dc_id(),
                     await self.storage.test_mode()
                 ).create()
             )
             await self.storage.user_id(None)
             await self.storage.is_bot(None)
         else:
-            # Needed for migration from storage v2 to v3
             if not await self.storage.api_id():
-                if self.api_id:
-                    await self.storage.api_id(self.api_id)
-                else:
-                    while True:
-                        try:
-                            value = int(await ainput("Enter the api_id part of the API key: "))
+                if not self.api_id:
+                    raise RuntimeError("The API ID is required for new authorizations")
 
-                            if value <= 0:
-                                print("Invalid value")
-                                continue
-
-                            confirm = (await ainput(f'Is "{value}" correct? (y/N): ')).lower()
-
-                            if confirm == "y":
-                                await self.storage.api_id(value)
-                                break
-                        except Exception as e:
-                            print(e)
+                await self.storage.api_id(self.api_id)
 
     def load_plugins(self):
         if self.plugins:
@@ -703,7 +675,7 @@ class Client(Methods):
                                     self.add_handler(handler, group)
 
                                     log.info('[{}] [LOAD] {}("{}") in group {} from "{}"'.format(
-                                        self.name, type(handler).__name__, name, group, module_path))
+                                        self.session_name, type(handler).__name__, name, group, module_path))
 
                                     count += 1
                         except Exception:
@@ -720,11 +692,11 @@ class Client(Methods):
                     try:
                         module = import_module(module_path)
                     except ImportError:
-                        log.warning('[%s] [LOAD] Ignoring non-existent module "%s"', self.name, module_path)
+                        log.warning('[%s] [LOAD] Ignoring non-existent module "%s"', self.session_name, module_path)
                         continue
 
                     if "__path__" in dir(module):
-                        log.warning('[%s] [LOAD] Ignoring namespace "%s"', self.name, module_path)
+                        log.warning('[%s] [LOAD] Ignoring namespace "%s"', self.session_name, module_path)
                         continue
 
                     if handlers is None:
@@ -739,13 +711,13 @@ class Client(Methods):
                                     self.add_handler(handler, group)
 
                                     log.info('[{}] [LOAD] {}("{}") in group {} from "{}"'.format(
-                                        self.name, type(handler).__name__, name, group, module_path))
+                                        self.session_name, type(handler).__name__, name, group, module_path))
 
                                     count += 1
                         except Exception:
                             if warn_non_existent_functions:
                                 log.warning('[{}] [LOAD] Ignoring non-existent function "{}" from "{}"'.format(
-                                    self.name, name, module_path))
+                                    self.session_name, name, module_path))
 
             if exclude:
                 for path, handlers in exclude:
@@ -758,11 +730,11 @@ class Client(Methods):
                     try:
                         module = import_module(module_path)
                     except ImportError:
-                        log.warning('[%s] [UNLOAD] Ignoring non-existent module "%s"', self.name, module_path)
+                        log.warning('[%s] [UNLOAD] Ignoring non-existent module "%s"', self.session_name, module_path)
                         continue
 
                     if "__path__" in dir(module):
-                        log.warning('[%s] [UNLOAD] Ignoring namespace "%s"', self.name, module_path)
+                        log.warning('[%s] [UNLOAD] Ignoring namespace "%s"', self.session_name, module_path)
                         continue
 
                     if handlers is None:
@@ -777,19 +749,19 @@ class Client(Methods):
                                     self.remove_handler(handler, group)
 
                                     log.info('[{}] [UNLOAD] {}("{}") from group {} in "{}"'.format(
-                                        self.name, type(handler).__name__, name, group, module_path))
+                                        self.session_name, type(handler).__name__, name, group, module_path))
 
                                     count -= 1
                         except Exception:
                             if warn_non_existent_functions:
                                 log.warning('[{}] [UNLOAD] Ignoring non-existent function "{}" from "{}"'.format(
-                                    self.name, name, module_path))
+                                    self.session_name, name, module_path))
 
             if count > 0:
                 log.info('[{}] Successfully loaded {} plugin{} from "{}"'.format(
-                    self.name, count, "s" if count > 1 else "", root))
+                    self.session_name, count, "s" if count > 1 else "", root))
             else:
-                log.warning('[%s] No plugin loaded from "%s"', self.name, root)
+                log.warning('[%s] No plugin loaded from "%s"', self.session_name, root)
 
     async def handle_download(self, packet):
         file_id, directory, file_name, in_memory, file_size, progress, progress_args = packet

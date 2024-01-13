@@ -169,11 +169,11 @@ class HTML:
                 MessageEntityType.UNDERLINE,
                 MessageEntityType.STRIKETHROUGH,
             ):
-                name = entity_type.name[0].lower()
+                name = entity_type.session_name[0].lower()
                 start_tag = f"<{name}>"
                 end_tag = f"</{name}>"
             elif entity_type == MessageEntityType.PRE:
-                name = entity_type.name.lower()
+                name = entity_type.session_name.lower()
                 language = getattr(entity, "language", "") or ""
                 start_tag = f'<{name} language="{language}">' if language else f"<{name}>"
                 end_tag = f"</{name}>"
@@ -182,7 +182,7 @@ class HTML:
                 MessageEntityType.BLOCKQUOTE,
                 MessageEntityType.SPOILER,
             ):
-                name = entity_type.name.lower()
+                name = entity_type.session_name.lower()
                 start_tag = f"<{name}>"
                 end_tag = f"</{name}>"
             elif entity_type == MessageEntityType.TEXT_LINK:
