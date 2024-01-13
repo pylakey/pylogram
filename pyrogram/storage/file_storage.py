@@ -31,7 +31,6 @@ class FileStorage(SQLiteStorage):
 
     def __init__(self, name: str, workdir: Path):
         super().__init__(name)
-
         self.database = workdir / (self.name + self.FILE_EXTENSION)
 
     def update(self):

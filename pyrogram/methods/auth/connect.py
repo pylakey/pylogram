@@ -40,8 +40,12 @@ class Connect:
         await self.load_session()
 
         self.session = Session(
-            self, await self.storage.dc_id(),
-            await self.storage.auth_key(), await self.storage.test_mode()
+            self,
+            await self.storage.dc_id(),
+            await self.storage.auth_key(),
+            await self.storage.test_mode(),
+            is_media=False,
+            is_cdn=False,
         )
 
         await self.session.start()

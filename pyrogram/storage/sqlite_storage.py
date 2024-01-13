@@ -19,7 +19,10 @@
 import inspect
 import sqlite3
 import time
-from typing import List, Tuple, Any
+from typing import Any
+from typing import List
+from typing import Optional
+from typing import Tuple
 
 from pyrogram import raw
 from .storage import Storage
@@ -203,10 +206,10 @@ class SQLiteStorage(Storage):
     async def date(self, value: int = object):
         return self._accessor(value)
 
-    async def user_id(self, value: int = object):
+    async def user_id(self, value: Optional[int] = object):
         return self._accessor(value)
 
-    async def is_bot(self, value: bool = object):
+    async def is_bot(self, value: Optional[bool] = object):
         return self._accessor(value)
 
     def version(self, value: int = object):
