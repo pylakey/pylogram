@@ -1,2 +1,2 @@
-tgcrypto
+tgcrypto==1.2.5
 pysocks==1.7.1
