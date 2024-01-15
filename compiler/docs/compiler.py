@@ -1,20 +1,21 @@
-#  Pyrogram - Telegram MTProto API Client Library for Python
-#  Copyright (C) 2017-present Dan <https://github.com/delivrance>
+#  Pylogram - Telegram MTProto API Client Library for Python
+#  Copyright (C) 2017-2023 Dan <https://github.com/delivrance>
+#  Copyright (C) 2023-2024 Pylakey <https://github.com/pylakey>
 #
-#  This file is part of Pyrogram.
+#  This file is part of Pylogram.
 #
-#  Pyrogram is free software: you can redistribute it and/or modify
+#  Pylogram is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU Lesser General Public License as published
 #  by the Free Software Foundation, either version 3 of the License, or
 #  (at your option) any later version.
 #
-#  Pyrogram is distributed in the hope that it will be useful,
+#  Pylogram is distributed in the hope that it will be useful,
 #  but WITHOUT ANY WARRANTY; without even the implied warranty of
 #  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #  GNU Lesser General Public License for more details.
 #
 #  You should have received a copy of the GNU Lesser General Public License
-#  along with Pyrogram.  If not, see <http://www.gnu.org/licenses/>.
+#  along with Pylogram.  If not, see <http://www.gnu.org/licenses/>.
 
 import ast
 import os
@@ -23,11 +24,11 @@ import shutil
 
 HOME = "compiler/docs"
 DESTINATION = "docs/source/telegram"
-PYROGRAM_API_DEST = "docs/source/api"
+PYLOGRAM_API_DEST = "docs/source/api"
 
-FUNCTIONS_PATH = "pyrogram/raw/functions"
-TYPES_PATH = "pyrogram/raw/types"
-BASE_PATH = "pyrogram/raw/base"
+FUNCTIONS_PATH = "pylogram/raw/functions"
+TYPES_PATH = "pylogram/raw/types"
+BASE_PATH = "pylogram/raw/base"
 
 FUNCTIONS_BASE = "functions"
 TYPES_BASE = "types"
@@ -78,7 +79,7 @@ def generate(source_path, base):
                         page_template.format(
                             title=full_name,
                             title_markup="=" * len(full_name),
-                            full_class_path="pyrogram.raw.{}".format(
+                            full_class_path="pylogram.raw.{}".format(
                                 ".".join(full_path.split("/")[:-1]) + "." + name
                             )
                         )
@@ -100,14 +101,14 @@ def generate(source_path, base):
 
         if k != base:
             inner_path = base + "/" + k + "/index" + ".rst"
-            module = "pyrogram.raw.{}.{}".format(base, k)
+            module = "pylogram.raw.{}.{}".format(base, k)
         else:
             for i in sorted(list(all_entities), reverse=True):
                 if i != base:
                     entities.insert(0, "{0}/index".format(i))
 
             inner_path = base + "/index" + ".rst"
-            module = "pyrogram.raw.{}".format(base)
+            module = "pylogram.raw.{}".format(base)
 
         with open(DESTINATION + "/" + inner_path, "w", encoding="utf-8") as f:
             if k == base:
@@ -126,7 +127,7 @@ def generate(source_path, base):
             f.write("\n")
 
 
-def pyrogram_api():
+def pylogram_api():
     def get_title_list(s: str) -> list:
         return [i.strip() for i in [j.strip() for j in s.split("\n") if j] if i]
 
@@ -335,7 +336,7 @@ def pyrogram_api():
         """
     )
 
-    root = PYROGRAM_API_DEST + "/methods"
+    root = PYLOGRAM_API_DEST + "/methods"
 
     shutil.rmtree(root, ignore_errors=True)
     os.mkdir(root)
@@ -355,7 +356,7 @@ def pyrogram_api():
                     title = "{}()".format(method)
 
                     f2.write(title + "\n" + "=" * len(title) + "\n\n")
-                    f2.write(".. automethod:: pyrogram.Client.{}()".format(method))
+                    f2.write(".. automethod:: pylogram.Client.{}()".format(method))
 
             functions = ["idle", "compose"]
 
@@ -364,7 +365,7 @@ def pyrogram_api():
                     title = "{}()".format(func)
 
                     f2.write(title + "\n" + "=" * len(title) + "\n\n")
-                    f2.write(".. autofunction:: pyrogram.{}()".format(func))
+                    f2.write(".. autofunction:: pylogram.{}()".format(func))
 
         f.write(template.format(**fmt_keys))
 
@@ -497,7 +498,7 @@ def pyrogram_api():
         """
     )
 
-    root = PYROGRAM_API_DEST + "/types"
+    root = PYLOGRAM_API_DEST + "/types"
 
     shutil.rmtree(root, ignore_errors=True)
     os.mkdir(root)
@@ -519,7 +520,7 @@ def pyrogram_api():
                     title = "{}".format(type)
 
                     f2.write(title + "\n" + "=" * len(title) + "\n\n")
-                    f2.write(".. autoclass:: pyrogram.types.{}()\n".format(type))
+                    f2.write(".. autoclass:: pylogram.types.{}()\n".format(type))
 
         f.write(template.format(**fmt_keys))
 
@@ -608,7 +609,7 @@ def pyrogram_api():
         """
     )
 
-    root = PYROGRAM_API_DEST + "/bound-methods"
+    root = PYLOGRAM_API_DEST + "/bound-methods"
 
     shutil.rmtree(root, ignore_errors=True)
     os.mkdir(root)
@@ -633,7 +634,7 @@ def pyrogram_api():
                     title = "{}()".format(bm)
 
                     f2.write(title + "\n" + "=" * len(title) + "\n\n")
-                    f2.write(".. automethod:: pyrogram.types.{}()".format(bm))
+                    f2.write(".. automethod:: pylogram.types.{}()".format(bm))
 
         f.write(template.format(**fmt_keys))
 
@@ -653,15 +654,15 @@ def start():
     generate(TYPES_PATH, TYPES_BASE)
     generate(FUNCTIONS_PATH, FUNCTIONS_BASE)
     generate(BASE_PATH, BASE_BASE)
-    pyrogram_api()
+    pylogram_api()
 
 
 if "__main__" == __name__:
-    FUNCTIONS_PATH = "../../pyrogram/raw/functions"
-    TYPES_PATH = "../../pyrogram/raw/types"
-    BASE_PATH = "../../pyrogram/raw/base"
+    FUNCTIONS_PATH = "../../pylogram/raw/functions"
+    TYPES_PATH = "../../pylogram/raw/types"
+    BASE_PATH = "../../pylogram/raw/base"
     HOME = "."
     DESTINATION = "../../docs/source/telegram"
-    PYROGRAM_API_DEST = "../../docs/source/api"
+    PYLOGRAM_API_DEST = "../../docs/source/api"
 
     start()

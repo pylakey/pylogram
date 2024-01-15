@@ -6,12 +6,12 @@ main.py
 unknown_errors.txt
 .DS_Store
 ./test.py
-# Pyrogram generated code
-pyrogram/errors/exceptions/
-pyrogram/raw/functions/
-pyrogram/raw/types/
-pyrogram/raw/base/
-pyrogram/raw/all.py
+# Pylogram generated code
+pylogram/errors/exceptions/
+pylogram/raw/functions/
+pylogram/raw/types/
+pylogram/raw/base/
+pylogram/raw/all.py
 docs/source/telegram
 docs/source/api/methods/
 docs/source/api/bound-methods/

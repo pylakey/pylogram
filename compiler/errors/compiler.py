@@ -1,20 +1,21 @@
-#  Pyrogram - Telegram MTProto API Client Library for Python
-#  Copyright (C) 2017-present Dan <https://github.com/delivrance>
+#  Pylogram - Telegram MTProto API Client Library for Python
+#  Copyright (C) 2017-2023 Dan <https://github.com/delivrance>
+#  Copyright (C) 2023-2024 Pylakey <https://github.com/pylakey>
 #
-#  This file is part of Pyrogram.
+#  This file is part of Pylogram.
 #
-#  Pyrogram is free software: you can redistribute it and/or modify
+#  Pylogram is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU Lesser General Public License as published
 #  by the Free Software Foundation, either version 3 of the License, or
 #  (at your option) any later version.
 #
-#  Pyrogram is distributed in the hope that it will be useful,
+#  Pylogram is distributed in the hope that it will be useful,
 #  but WITHOUT ANY WARRANTY; without even the implied warranty of
 #  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #  GNU Lesser General Public License for more details.
 #
 #  You should have received a copy of the GNU Lesser General Public License
-#  along with Pyrogram.  If not, see <http://www.gnu.org/licenses/>.
+#  along with Pylogram.  If not, see <http://www.gnu.org/licenses/>.
 
 import csv
 import os
@@ -22,7 +23,7 @@ import re
 import shutil
 
 HOME = "compiler/errors"
-DEST = "pyrogram/errors/exceptions"
+DEST = "pylogram/errors/exceptions"
 NOTICE_PATH = "NOTICE"
 
 
@@ -136,7 +137,7 @@ def start():
 
 if "__main__" == __name__:
     HOME = "."
-    DEST = "../../pyrogram/errors/exceptions"
+    DEST = "../../pylogram/errors/exceptions"
     NOTICE_PATH = "../../NOTICE"
 
     start()
