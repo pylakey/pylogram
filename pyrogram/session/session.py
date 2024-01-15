@@ -274,7 +274,7 @@ class Session:
         while True:
             try:
                 await asyncio.wait_for(self.ping_task_event.wait(), self.PING_INTERVAL)
-            except asyncio.TimeoutError:
+            except (asyncio.TimeoutError, TimeoutError):
                 pass
             else:
                 break
@@ -342,7 +342,7 @@ class Session:
         if wait_response:
             try:
                 await asyncio.wait_for(self.results[msg_id].event.wait(), timeout)
-            except asyncio.TimeoutError:
+            except (asyncio.TimeoutError, TimeoutError):
                 pass
 
             result = self.results.pop(msg_id).value
@@ -374,7 +374,7 @@ class Session:
     ):
         try:
             await asyncio.wait_for(self.is_started.wait(), self.WAIT_TIMEOUT)
-        except asyncio.TimeoutError:
+        except (asyncio.TimeoutError, TimeoutError):
             pass
 
         if isinstance(query, (raw.functions.InvokeWithoutUpdates, raw.functions.InvokeWithTakeout)):

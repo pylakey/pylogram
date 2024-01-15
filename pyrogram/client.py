@@ -330,7 +330,7 @@ class Client(Methods):
         while True:
             try:
                 await asyncio.wait_for(self.updates_watchdog_event.wait(), self.UPDATES_WATCHDOG_INTERVAL)
-            except asyncio.TimeoutError:
+            except (asyncio.TimeoutError, TimeoutError):
                 pass
             else:
                 break
