@@ -16,15 +16,12 @@
 #
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with Pylogram.  If not, see <http://www.gnu.org/licenses/>.
-
-try:
-    import orjson as python_json
-except ImportError:
-    import json as python_json
-
-from typing import Any, Dict
+import json
+from typing import Any
+from typing import Dict
 
 import pylogram
+import pylogram.errors.lib_errors
 
 
 class UpdateBucket(object):
@@ -65,17 +62,17 @@ class UpdateBucket(object):
         return self._bucket
 
     def json(self, **kwargs) -> str:
-        return python_json.dumps(self._bucket, **kwargs)
+        return json.dumps(self._bucket, **kwargs)
 
-    def parse_json(self, json: str):
-        self.set(python_json.loads(json))
+    def parse_json(self, json_string: str):
+        self.set(json.loads(json_string))
 
 
 class Update:
     bucket: UpdateBucket = UpdateBucket()
 
     def stop_propagation(self):
-        raise pylogram.StopPropagation
+        raise pylogram.errors.lib_errors.StopPropagation
 
     def continue_propagation(self):
-        raise pylogram.ContinuePropagation
+        raise pylogram.errors.lib_errors.ContinuePropagation

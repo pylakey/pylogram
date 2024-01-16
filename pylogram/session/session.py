@@ -28,13 +28,20 @@ import pylogram
 from pylogram import raw
 from pylogram.connection import Connection
 from pylogram.crypto import mtproto
-from pylogram.errors import (
-    RPCError, InternalServerError, AuthKeyDuplicated, FloodWait, ServiceUnavailable, BadMsgNotification,
-    SecurityCheckMismatch
-)
+from pylogram.errors import AuthKeyDuplicated
+from pylogram.errors import BadMsgNotification
+from pylogram.errors import FloodWait
+from pylogram.errors import InternalServerError
+from pylogram.errors import RPCError
+from pylogram.errors import SecurityCheckMismatch
+from pylogram.errors import ServiceUnavailable
 from pylogram.raw.all import layer
-from pylogram.raw.core import TLObject, MsgContainer, Int, FutureSalts
-from .internals import MsgId, MsgFactory
+from pylogram.raw.core import FutureSalts
+from pylogram.raw.core import Int
+from pylogram.raw.core import MsgContainer
+from pylogram.raw.core import TLObject
+from .internals import MsgFactory
+from .internals import MsgId
 
 log = logging.getLogger(__name__)
 
@@ -61,13 +68,13 @@ class Session:
     }
 
     def __init__(
-        self,
-        client: "pylogram.Client",
-        dc_id: int,
-        auth_key: bytes,
-        test_mode: bool,
-        is_media: bool = False,
-        is_cdn: bool = False
+            self,
+            client: "pylogram.Client",
+            dc_id: int,
+            auth_key: bytes,
+            test_mode: bool,
+            is_media: bool = False,
+            is_cdn: bool = False
     ):
         self.client = client
         self.dc_id = dc_id
@@ -75,30 +82,21 @@ class Session:
         self.test_mode = test_mode
         self.is_media = is_media
         self.is_cdn = is_cdn
-
         self.connection = None
-
         self.auth_key_id = sha1(auth_key).digest()[-8:]
-
         self.session_id = os.urandom(8)
         self.msg_factory = MsgFactory()
-
         self.salt = 0
-
         self.pending_acks = set()
-
         self.results = {}
-
         self.stored_msg_ids = []
-
         self.ping_task = None
         self.ping_task_event = asyncio.Event()
-
         self.recv_task = None
-
         self.is_started = asyncio.Event()
-
         self.loop = asyncio.get_event_loop()
+        self.background_tasks = set()
+        self.updates_handling_tasks = set()
 
     async def start(self):
         while True:
@@ -157,9 +155,7 @@ class Session:
 
     async def stop(self):
         self.is_started.clear()
-
         self.stored_msg_ids.clear()
-
         self.ping_task_event.set()
 
         if self.ping_task is not None:
@@ -184,15 +180,29 @@ class Session:
         await self.stop()
         await self.start()
 
+    def _create_task(self, coro) -> asyncio.Task:
+        # Use Best Practices from official python docs
+        # https://docs.python.org/3/library/asyncio-task.html#asyncio.create_task
+        t = self.loop.create_task(coro)
+        self.background_tasks.add(t)
+        t.add_done_callback(self.background_tasks.discard)
+        return t
+
     async def handle_packet(self, packet):
-        data = await self.loop.run_in_executor(
-            pylogram.crypto_executor,
-            mtproto.unpack,
+        data = mtproto.unpack(
             BytesIO(packet),
             self.session_id,
             self.auth_key,
             self.auth_key_id
         )
+        # data = await self.loop.run_in_executor(
+        #     pylogram.crypto_executor,
+        #     mtproto.unpack,
+        #     BytesIO(packet),
+        #     self.session_id,
+        #     self.auth_key,
+        #     self.auth_key_id
+        # )
 
         messages = (
             data.body.messages
@@ -253,7 +263,7 @@ class Session:
                 msg_id = msg.body.msg_id
             else:
                 if self.client is not None:
-                    self.loop.create_task(self.client.handle_updates(msg.body))
+                    self._create_task(self.client.handle_updates(msg.body))
 
             if msg_id in self.results:
                 self.results[msg_id].value = getattr(msg.body, "result", msg.body)
@@ -307,11 +317,11 @@ class Session:
                     )
 
                 if self.is_started.is_set():
-                    self.loop.create_task(self.restart())
+                    self._create_task(self.restart())
 
                 break
 
-            self.loop.create_task(self.handle_packet(packet))
+            self._create_task(self.handle_packet(packet))
 
         log.info("NetworkTask stopped")
 
@@ -323,16 +333,22 @@ class Session:
             self.results[msg_id] = Result()
 
         log.debug("Sent: %s", message)
-
-        payload = await self.loop.run_in_executor(
-            pylogram.crypto_executor,
-            mtproto.pack,
+        payload = mtproto.pack(
             message,
             self.salt,
             self.session_id,
             self.auth_key,
             self.auth_key_id
         )
+        # payload = await self.loop.run_in_executor(
+        #     pylogram.crypto_executor,
+        #     mtproto.pack,
+        #     message,
+        #     self.salt,
+        #     self.session_id,
+        #     self.auth_key,
+        #     self.auth_key_id
+        # )
 
         try:
             await self.connection.send(payload)
@@ -367,11 +383,11 @@ class Session:
             return result
 
     async def invoke(
-        self,
-        query: TLObject,
-        retries: int = MAX_RETRIES,
-        timeout: float = WAIT_TIMEOUT,
-        sleep_threshold: float = SLEEP_THRESHOLD
+            self,
+            query: TLObject,
+            retries: int = MAX_RETRIES,
+            timeout: float = WAIT_TIMEOUT,
+            sleep_threshold: float = SLEEP_THRESHOLD
     ):
         try:
             await asyncio.wait_for(self.is_started.wait(), self.WAIT_TIMEOUT)

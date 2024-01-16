@@ -38,17 +38,4 @@ from . import types
 from .client import Client
 from .dispatcher import Dispatcher
 
-
-class StopTransmission(Exception):
-    pass
-
-
-class StopPropagation(StopAsyncIteration):
-    pass
-
-
-class ContinuePropagation(StopAsyncIteration):
-    pass
-
-
 crypto_executor = ThreadPoolExecutor(1, thread_name_prefix="CryptoWorker")

@@ -19,10 +19,12 @@
 
 import asyncio
 import base64
+import contextlib
 import hashlib
 import os
 import struct
 import sys
+import time
 from datetime import datetime
 from datetime import timezone
 from getpass import getpass
@@ -387,3 +389,15 @@ def timestamp_to_datetime(ts: Optional[int]) -> Optional[datetime]:
 
 def datetime_to_timestamp(dt: Optional[datetime]) -> Optional[int]:
     return int(dt.timestamp()) if dt else None
+
+
+@contextlib.asynccontextmanager
+async def async_perf_counter():
+    start = time.perf_counter()
+
+    try:
+        yield
+    finally:
+        end = time.perf_counter()
+        elapsed_time = end - start
+        print(f"Elapsed time: {elapsed_time}")

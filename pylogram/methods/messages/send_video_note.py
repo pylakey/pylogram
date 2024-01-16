@@ -22,7 +22,7 @@ from datetime import datetime
 from typing import Union, BinaryIO, Optional, Callable
 
 import pylogram
-from pylogram import StopTransmission
+from pylogram.errors.lib_errors import StopTransmission
 from pylogram import raw
 from pylogram import types
 from pylogram import utils

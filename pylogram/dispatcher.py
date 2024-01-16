@@ -21,31 +21,44 @@ import asyncio
 import inspect
 import logging
 from collections import OrderedDict
-from functools import partial, update_wrapper
-from typing import (
-    Iterable,
-    Iterator,
-    List,
-    Optional,
-)
+from functools import partial
+from functools import update_wrapper
+from typing import Iterable
+from typing import Iterator
+from typing import List
+from typing import Optional
 
 import pylogram
+import pylogram.errors.lib_errors
 from pylogram import utils
-from pylogram.handlers import (
-    CallbackQueryHandler, MessageHandler, EditedMessageHandler, DeletedMessagesHandler,
-    UserStatusHandler, RawUpdateHandler, InlineQueryHandler, PollHandler,
-    ChosenInlineResultHandler, ChatMemberUpdatedHandler, ChatJoinRequestHandler
-)
+from pylogram.handlers import CallbackQueryHandler
+from pylogram.handlers import ChatJoinRequestHandler
+from pylogram.handlers import ChatMemberUpdatedHandler
+from pylogram.handlers import ChosenInlineResultHandler
+from pylogram.handlers import DeletedMessagesHandler
+from pylogram.handlers import EditedMessageHandler
+from pylogram.handlers import InlineQueryHandler
+from pylogram.handlers import MessageHandler
+from pylogram.handlers import PollHandler
+from pylogram.handlers import RawUpdateHandler
+from pylogram.handlers import UserStatusHandler
 from pylogram.middleware import Middleware
-from pylogram.raw.types import (
-    UpdateNewMessage, UpdateNewChannelMessage, UpdateNewScheduledMessage,
-    UpdateEditMessage, UpdateEditChannelMessage,
-    UpdateDeleteMessages, UpdateDeleteChannelMessages,
-    UpdateBotCallbackQuery, UpdateInlineBotCallbackQuery,
-    UpdateUserStatus, UpdateBotInlineQuery, UpdateMessagePoll,
-    UpdateBotInlineSend, UpdateChatParticipant, UpdateChannelParticipant,
-    UpdateBotChatInviteRequester
-)
+from pylogram.raw.types import UpdateBotCallbackQuery
+from pylogram.raw.types import UpdateBotChatInviteRequester
+from pylogram.raw.types import UpdateBotInlineQuery
+from pylogram.raw.types import UpdateBotInlineSend
+from pylogram.raw.types import UpdateChannelParticipant
+from pylogram.raw.types import UpdateChatParticipant
+from pylogram.raw.types import UpdateDeleteChannelMessages
+from pylogram.raw.types import UpdateDeleteMessages
+from pylogram.raw.types import UpdateEditChannelMessage
+from pylogram.raw.types import UpdateEditMessage
+from pylogram.raw.types import UpdateInlineBotCallbackQuery
+from pylogram.raw.types import UpdateMessagePoll
+from pylogram.raw.types import UpdateNewChannelMessage
+from pylogram.raw.types import UpdateNewMessage
+from pylogram.raw.types import UpdateNewScheduledMessage
+from pylogram.raw.types import UpdateUserStatus
 
 log = logging.getLogger(__name__)
 
@@ -69,28 +82,27 @@ class Dispatcher:
     def __init__(self, client: "pylogram.Client"):
         self.client = client
         self.loop = asyncio.get_event_loop()
-
         self.handler_worker_tasks = []
         self.locks_list = []
-
         self.updates_queue = asyncio.Queue()
         self.groups = OrderedDict()
 
         async def message_parser(update, users, chats):
             return (
-                await pylogram.types.Message._parse(self.client, update.message, users, chats,
-                                                    isinstance(update, UpdateNewScheduledMessage)),
+                await pylogram.types.Message._parse(
+                    self.client,
+                    update.message,
+                    users,
+                    chats,
+                    isinstance(update, UpdateNewScheduledMessage)
+                ),
                 MessageHandler
             )
 
         async def edited_message_parser(update, users, chats):
             # Edited messages are parsed the same way as new messages, but the handler is different
             parsed, _ = await message_parser(update, users, chats)
-
-            return (
-                parsed,
-                EditedMessageHandler
-            )
+            return parsed, EditedMessageHandler
 
         async def deleted_messages_parser(update, users, chats):
             return (
@@ -152,7 +164,6 @@ class Dispatcher:
             Dispatcher.CHAT_MEMBER_UPDATES: chat_member_updated_parser,
             Dispatcher.CHAT_JOIN_REQUEST_UPDATES: chat_join_request_parser
         }
-
         self.update_parsers = {key: value for key_tuple, value in self.update_parsers.items() for key in key_tuple}
 
     async def start(self):
@@ -162,7 +173,6 @@ class Dispatcher:
         if not self.client.no_updates:
             for i in range(self.client.workers):
                 self.locks_list.append(asyncio.Lock())
-
                 self.handler_worker_tasks.append(
                     self.loop.create_task(self.handler_worker(self.locks_list[-1]))
                 )
@@ -214,7 +224,6 @@ class Dispatcher:
                     lock.release()
 
         self.loop.create_task(fn())
-
 
     def add_middleware(self, middleware: Middleware):
         async def fn():
@@ -278,7 +287,7 @@ class Dispatcher:
                         await self.handle_update_with_middlewares(update, parsed_update, handler_type, users, chats)
                     else:
                         await self.handle_update(update, parsed_update, handler_type, users, chats)
-            except pylogram.StopPropagation:
+            except pylogram.errors.lib_errors.StopPropagation:
                 pass
             except Exception as e:
                 log.exception(e)
@@ -312,12 +321,11 @@ class Dispatcher:
                             self.client,
                             *args
                         )
-                except pylogram.StopPropagation:
+                except pylogram.errors.lib_errors.StopPropagation:
                     raise
-                except pylogram.ContinuePropagation:
+                except pylogram.errors.lib_errors.ContinuePropagation:
                     continue
                 except Exception as e:
                     log.exception(e)
 
                 break
-

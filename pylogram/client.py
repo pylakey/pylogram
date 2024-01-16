@@ -41,6 +41,7 @@ from typing import Optional
 from typing import Union
 
 import pylogram
+import pylogram.errors.lib_errors
 from pylogram import __version__
 from pylogram import enums
 from pylogram import raw
@@ -272,7 +273,6 @@ class Client(Methods):
         self.sleep_threshold = sleep_threshold
         self.hide_password = hide_password
         self.max_concurrent_transmissions = max_concurrent_transmissions
-
         self.executor = ThreadPoolExecutor(self.workers, thread_name_prefix="Handler")
 
         if isinstance(session_storage, Storage):
@@ -1001,7 +1001,7 @@ class Client(Methods):
                         raise e
                     finally:
                         await cdn_session.stop()
-            except pylogram.StopTransmission:
+            except pylogram.errors.lib_errors.StopTransmission:
                 raise
             except Exception as e:
                 log.exception(e)

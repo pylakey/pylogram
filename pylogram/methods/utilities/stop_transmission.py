@@ -18,6 +18,7 @@
 #  along with Pylogram.  If not, see <http://www.gnu.org/licenses/>.
 
 import pylogram
+import pylogram.errors.lib_errors
 
 
 class StopTransmission:
@@ -41,4 +42,4 @@ class StopTransmission:
                         progress=progress,
                         progress_args=(app,))
         """
-        raise pylogram.StopTransmission
+        raise pylogram.errors.lib_errors.StopTransmission

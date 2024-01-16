@@ -23,6 +23,7 @@ from datetime import datetime
 from typing import Union, BinaryIO, List, Optional, Callable
 
 import pylogram
+import pylogram.errors.lib_errors
 from pylogram import raw, enums
 from pylogram import types
 from pylogram import utils
@@ -203,5 +204,5 @@ class SendPhoto:
                                 {i.id: i for i in r.chats},
                                 is_scheduled=isinstance(i, raw.types.UpdateNewScheduledMessage)
                             )
-        except pylogram.StopTransmission:
+        except pylogram.errors.lib_errors.StopTransmission:
             return None
