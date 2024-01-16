@@ -637,9 +637,6 @@ class Client(Methods):
             await self.storage.is_bot(None)
         else:
             if not await self.storage.api_id():
-                if not self.api_id:
-                    raise RuntimeError("The API ID is required for new authorizations")
-
                 await self.storage.api_id(self.api_id)
 
     def load_plugins(self):

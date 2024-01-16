@@ -108,11 +108,17 @@ class Session:
                 self.is_media
             )
 
+            api_id = self.client.api_id
+
+            if not bool(api_id):
+                api_id = await self.client.storage.api_id()
+
+            if not bool(api_id):
+                raise RuntimeError("Cannot execute InitConnection without api_id")
+
             try:
                 await self.connection.connect()
-
                 self.recv_task = self.loop.create_task(self.recv_worker())
-
                 await self.send(raw.functions.Ping(ping_id=0), timeout=self.START_TIMEOUT)
 
                 if not self.is_cdn:
@@ -120,7 +126,7 @@ class Session:
                         raw.functions.InvokeWithLayer(
                             layer=layer,
                             query=raw.functions.InitConnection(
-                                api_id=await self.client.storage.api_id(),
+                                api_id=api_id,
                                 app_version=self.client.app_version,
                                 device_model=self.client.device_model,
                                 system_version=self.client.system_version,
