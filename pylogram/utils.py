@@ -19,32 +19,49 @@
 
 import asyncio
 import base64
-import functools
 import hashlib
 import os
 import struct
-from concurrent.futures.thread import ThreadPoolExecutor
-from datetime import datetime, timezone
+import sys
+from datetime import datetime
+from datetime import timezone
 from getpass import getpass
-from typing import Union, List, Dict, Optional
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Union
 
 import pylogram
-from pylogram import raw, enums
+from pylogram import enums
+from pylogram import raw
 from pylogram import types
-from pylogram.file_id import FileId, FileType, PHOTO_TYPES, DOCUMENT_TYPES
+from pylogram.file_id import DOCUMENT_TYPES
+from pylogram.file_id import FileId
+from pylogram.file_id import FileType
+from pylogram.file_id import PHOTO_TYPES
 
 
-async def ainput(prompt: str = "", *, hide: bool = False):
-    """Just like the built-in input, but async"""
-    with ThreadPoolExecutor(1) as executor:
-        func = functools.partial(getpass if hide else input, prompt)
-        return await asyncio.get_event_loop().run_in_executor(executor, func)
+def _read_input(prompt: str = "") -> str:
+    print(prompt, end=" ", flush=True)
+    return sys.stdin.readline()
+
+
+async def ainput(prompt: str = "", *, hide: bool = False) -> str:
+    if len(prompt):
+        prompt = prompt.strip()
+
+    if hide:
+        stdin = await asyncio.to_thread(getpass, prompt=prompt, stream=None)
+    else:
+        stdin = await asyncio.to_thread(_read_input, prompt)
+
+    return stdin.strip()
 
 
 def get_input_media_from_file_id(
-    file_id: str,
-    expected_file_type: FileType = None,
-    ttl_seconds: int = None
+        file_id: str,
+        expected_file_type: FileType = None,
+        ttl_seconds: int = None
 ) -> Union["raw.types.InputMediaPhoto", "raw.types.InputMediaDocument"]:
     try:
         decoded = FileId.decode(file_id)
@@ -86,9 +103,9 @@ def get_input_media_from_file_id(
 
 
 async def parse_messages(
-    client,
-    messages: "raw.types.messages.Messages",
-    replies: int = 1
+        client,
+        messages: "raw.types.messages.Messages",
+        replies: int = 1
 ) -> List["types.Message"]:
     users = {i.id: i for i in messages.users}
     chats = {i.id: i for i in messages.chats}
@@ -268,8 +285,8 @@ def xor(a: bytes, b: bytes) -> bytes:
 
 
 def compute_password_hash(
-    algo: raw.types.PasswordKdfAlgoSHA256SHA256PBKDF2HMACSHA512iter100000SHA256ModPow,
-    password: str
+        algo: raw.types.PasswordKdfAlgoSHA256SHA256PBKDF2HMACSHA512iter100000SHA256ModPow,
+        password: str
 ) -> bytes:
     hash1 = sha256(algo.salt1 + password.encode() + algo.salt1)
     hash2 = sha256(algo.salt2 + hash1 + algo.salt2)
@@ -280,8 +297,8 @@ def compute_password_hash(
 
 # noinspection PyPep8Naming
 def compute_password_check(
-    r: raw.types.account.Password,
-    password: str
+        r: raw.types.account.Password,
+        password: str
 ) -> raw.types.InputCheckPasswordSRP:
     algo = r.current_algo
 
@@ -340,10 +357,10 @@ def compute_password_check(
 
 
 async def parse_text_entities(
-    client: "pylogram.Client",
-    text: str,
-    parse_mode: enums.ParseMode,
-    entities: List["types.MessageEntity"]
+        client: "pylogram.Client",
+        text: str,
+        parse_mode: enums.ParseMode,
+        entities: List["types.MessageEntity"]
 ) -> Dict[str, Union[str, List[raw.base.MessageEntity]]]:
     if entities:
         # Inject the client instance because parsing user mentions requires it
