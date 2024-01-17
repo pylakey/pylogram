@@ -70,7 +70,16 @@ class ResolvePeer:
                 if peer_id in ("self", "me"):
                     return raw.types.InputPeerSelf()
 
-                peer_id = re.sub(r"[@+\s]", "", peer_id.lower())
+                if bool(invite_link_match := self.INVITE_LINK_RE.match(peer_id)):
+                    # TODO: Support invite links
+                    pass
+
+                peer_id = peer_id.lower()
+                # Remove all valid user url components
+                # like (https://username.t.me, https://t.me/username, https://telegram.me/username)
+                peer_id = re.sub(r"(http(s)?://)|(\.?t\.me/?)", "", peer_id)
+                # Remove all non-username characters
+                peer_id = re.sub(r"[^a-z0-9_]", "", peer_id)
 
                 try:
                     int(peer_id)
