@@ -53,23 +53,35 @@ class JoinChat:
                 # Join a linked chat
                 await app.join_chat(app.get_chat("pylogram").linked_chat.id)
         """
-        match = self.INVITE_LINK_RE.match(str(chat_id))
 
-        if match:
-            chat = await self.invoke(
-                raw.functions.messages.ImportChatInvite(
-                    hash=match.group(1)
+        if bool(match := self.INVITE_LINK_RE.match(str(chat_id))):
+            invite_hash = match.group(1)
+            chat_invite = await self.invoke(
+                raw.functions.messages.CheckChatInvite(
+                    hash=invite_hash
                 )
             )
-            if isinstance(chat.chats[0], raw.types.Chat):
-                return types.Chat._parse_chat_chat(self, chat.chats[0])
-            elif isinstance(chat.chats[0], raw.types.Channel):
-                return types.Chat._parse_channel_chat(self, chat.chats[0])
+
+            if isinstance(chat_invite, raw.types.ChatInviteAlready):
+                chat = chat_invite.chat
+            else:
+                result = await self.invoke(
+                    raw.functions.messages.ImportChatInvite(
+                        hash=invite_hash
+                    )
+                )
+                chat = result.chats[0]
         else:
-            chat = await self.invoke(
+            result = await self.invoke(
                 raw.functions.channels.JoinChannel(
                     channel=await self.resolve_peer(chat_id)
                 )
             )
+            chat = result.chats[0]
 
-            return types.Chat._parse_channel_chat(self, chat.chats[0])
+        if isinstance(chat, raw.types.Chat):
+            # noinspection PyProtectedMember
+            return types.Chat._parse_chat_chat(self, chat)
+        elif isinstance(chat, raw.types.Channel):
+            # noinspection PyProtectedMember
+            return types.Chat._parse_channel_chat(self, chat)
