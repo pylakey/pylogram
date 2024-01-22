@@ -259,10 +259,12 @@ def start(format: bool = False):
 
             args = ARGS_RE.findall(line)
 
-            # Fix arg name being "self" (reserved python keyword)
+            # Fix args names being reserved python keyword
             for i, item in enumerate(args):
                 if item[0] == "self":
                     args[i] = ("is_self", item[1])
+                elif item[0] == "from":
+                    args[i] = ("from_peer", item[1])
 
             combinator = Combinator(
                 section=section,
