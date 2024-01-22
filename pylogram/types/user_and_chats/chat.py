@@ -145,6 +145,7 @@ class Chat(Object):
         is_fake: bool = None,
         is_support: bool = None,
         is_forum: bool = None,
+        view_forum_as_messages: bool = None,
         title: str = None,
         username: str = None,
         first_name: str = None,
@@ -164,7 +165,11 @@ class Chat(Object):
         distance: int = None,
         linked_chat: "types.Chat" = None,
         send_as_chat: "types.Chat" = None,
-        available_reactions: Optional["types.ChatReactions"] = None
+        available_reactions: Optional["types.ChatReactions"] = None,
+        color: Optional["raw.types.PeerColor"] = None,
+        profile_color: Optional["raw.types.PeerColor"] = None,
+        emoji_status: Optional["raw.base.EmojiStatus"] = None,
+        level: Optional[int] = None,
     ):
         super().__init__(client)
 
@@ -177,12 +182,14 @@ class Chat(Object):
         self.is_fake = is_fake
         self.is_support = is_support
         self.is_forum = is_forum
+        self.view_forum_as_messages = view_forum_as_messages
         self.title = title
         self.username = username
         self.first_name = first_name
         self.last_name = last_name
         self.photo = photo
         self.bio = bio
+        self.about = bio
         self.description = description
         self.dc_id = dc_id
         self.has_protected_content = has_protected_content
@@ -197,6 +204,10 @@ class Chat(Object):
         self.linked_chat = linked_chat
         self.send_as_chat = send_as_chat
         self.available_reactions = available_reactions
+        self.color = color
+        self.profile_color = profile_color
+        self.emoji_status = emoji_status
+        self.level = level
 
     @staticmethod
     def _parse_user_chat(client, user: raw.types.User) -> "Chat":
@@ -216,7 +227,9 @@ class Chat(Object):
             photo=types.ChatPhoto._parse(client, user.photo, peer_id, user.access_hash),
             restrictions=types.List([types.Restriction._parse(r) for r in user.restriction_reason]) or None,
             dc_id=getattr(getattr(user, "photo", None), "dc_id", None),
-            client=client
+            client=client,
+            color=getattr(user, 'color', None),
+            profile_color=getattr(user, 'profile_color', None),
         )
 
     @staticmethod
@@ -233,8 +246,13 @@ class Chat(Object):
             members_count=getattr(chat, "participants_count", None),
             dc_id=getattr(getattr(chat, "photo", None), "dc_id", None),
             has_protected_content=getattr(chat, "noforwards", None),
-            client=client
+            client=client,
         )
+
+    @staticmethod
+    def _parse_channel_full_chat(client, channel_full: raw.types.ChannelFull):
+        peer_id = utils.get_channel_id(channel_full.id)
+
 
     @staticmethod
     def _parse_channel_chat(client, channel: raw.types.Channel) -> "Chat":
@@ -250,16 +268,25 @@ class Chat(Object):
             is_scam=getattr(channel, "scam", None),
             is_fake=getattr(channel, "fake", None),
             is_forum=getattr(channel, "forum", None),
+            view_forum_as_messages=getattr(channel, "view_forum_as_messages", None),
             title=channel.title,
             username=getattr(channel, "username", None),
-            photo=types.ChatPhoto._parse(client, getattr(channel, "photo", None), peer_id,
-                                         getattr(channel, "access_hash", 0)),
+            photo=types.ChatPhoto._parse(
+                client,
+                getattr(channel, "photo", None),
+                peer_id,
+                getattr(channel, "access_hash", 0)
+            ),
             restrictions=types.List([types.Restriction._parse(r) for r in restriction_reason]) or None,
             permissions=types.ChatPermissions._parse(getattr(channel, "default_banned_rights", None)),
             members_count=getattr(channel, "participants_count", None),
             dc_id=getattr(getattr(channel, "photo", None), "dc_id", None),
             has_protected_content=getattr(channel, "noforwards", None),
-            client=client
+            client=client,
+            color=getattr(channel, 'color', None),
+            profile_color=getattr(channel, 'profile_color', None),
+            emoji_status=getattr(channel, 'emoji_status', None),
+            level=getattr(channel, 'level', None),
         )
 
     @staticmethod
@@ -301,6 +328,7 @@ class Chat(Object):
 
             parsed_chat = Chat._parse_user_chat(client, users[full_user.id])
             parsed_chat.bio = full_user.about
+            parsed_chat.about = full_user.about
 
             if full_user.pinned_msg_id:
                 parsed_chat.pinned_message = await client.get_messages(

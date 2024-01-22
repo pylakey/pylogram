@@ -180,7 +180,10 @@ class User(Object, Update):
         close_friend: Optional[bool] = None,
         stories_hidden: Optional[bool] = None,
         stories_unavailable: Optional[bool] = None,
-        stories_max_id: Optional[int] = None
+        stories_max_id: Optional[int] = None,
+        contact_require_premium: bool = False,
+        color: Optional["raw.types.PeerColor"] = None,
+        profile_color: Optional["raw.types.PeerColor"] = None,
     ):
         super().__init__(client)
 
@@ -222,6 +225,9 @@ class User(Object, Update):
         self.stories_hidden = stories_hidden
         self.stories_unavailable = stories_unavailable
         self.stories_max_id = stories_max_id
+        self.contact_require_premium = contact_require_premium
+        self.color = color
+        self.profile_color = profile_color
 
     @property
     def mention(self):
@@ -265,6 +271,9 @@ class User(Object, Update):
             stories_hidden=user.stories_hidden,
             stories_unavailable=user.stories_unavailable,
             stories_max_id=user.stories_max_id,
+            contact_require_premium=user.contact_require_premium,
+            color=user.color,
+            profile_color=user.profile_color,
         )
 
     @staticmethod
@@ -354,7 +363,7 @@ class User(Object, Update):
 
         return await self._client.unarchive_chats(self.id)
 
-    def block(self):
+    async def block(self):
         """Bound method *block* of :obj:`~pylogram.types.User`.
 
         Use as a shortcut for:
@@ -375,9 +384,9 @@ class User(Object, Update):
             RPCError: In case of a Telegram RPC error.
         """
 
-        return self._client.block_user(self.id)
+        return await self._client.block_user(self.id)
 
-    def unblock(self):
+    async def unblock(self) -> bool:
         """Bound method *unblock* of :obj:`~pylogram.types.User`.
 
         Use as a shortcut for:
@@ -398,9 +407,9 @@ class User(Object, Update):
             RPCError: In case of a Telegram RPC error.
         """
 
-        return self._client.unblock_user(self.id)
+        return await self._client.unblock_user(self.id)
 
-    def get_common_chats(self):
+    async def get_common_chats(self):
         """Bound method *get_common_chats* of :obj:`~pylogram.types.User`.
 
         Use as a shortcut for:
@@ -421,4 +430,4 @@ class User(Object, Update):
             RPCError: In case of a Telegram RPC error.
         """
 
-        return self._client.get_common_chats(self.id)
+        return await self._client.get_common_chats(self.id)
