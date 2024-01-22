@@ -148,6 +148,7 @@ class Chat(Object):
         view_forum_as_messages: bool = None,
         title: str = None,
         username: str = None,
+        usernames: List["types.Username"] = None,
         first_name: str = None,
         last_name: str = None,
         photo: "types.ChatPhoto" = None,
@@ -185,6 +186,7 @@ class Chat(Object):
         self.view_forum_as_messages = view_forum_as_messages
         self.title = title
         self.username = username
+        self.usernames = usernames
         self.first_name = first_name
         self.last_name = last_name
         self.photo = photo
@@ -222,6 +224,7 @@ class Chat(Object):
             is_fake=getattr(user, "fake", None),
             is_support=getattr(user, "support", None),
             username=user.username,
+            usernames=user.usernames,
             first_name=user.first_name,
             last_name=user.last_name,
             photo=types.ChatPhoto._parse(client, user.photo, peer_id, user.access_hash),
@@ -271,6 +274,7 @@ class Chat(Object):
             view_forum_as_messages=getattr(channel, "view_forum_as_messages", None),
             title=channel.title,
             username=getattr(channel, "username", None),
+            usernames=types.List([types.Username._parse(u) for u in channel.usernames]) or [],
             photo=types.ChatPhoto._parse(
                 client,
                 getattr(channel, "photo", None),
