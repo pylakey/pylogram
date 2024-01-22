@@ -18,7 +18,6 @@
 #  along with Pylogram.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
-import re
 from typing import Union
 
 import pylogram
@@ -74,31 +73,40 @@ class ResolvePeer:
                     # TODO: Support invite links
                     pass
 
-                peer_id = peer_id.lower()
-                # Remove all valid user url components
-                # like (https://username.t.me, https://t.me/username, https://telegram.me/username)
-                peer_id = re.sub(r"(http(s)?://)|(\.?t\.me/?)", "", peer_id)
-                # Remove all non-username characters
-                peer_id = re.sub(r"[^a-z0-9_]", "", peer_id)
+                peer_id = peer_id.strip('@+ ')
 
                 try:
                     int(peer_id)
                 except ValueError:
+                    username = utils.parse_username(peer_id)
+
                     try:
-                        return await self.storage.get_peer_by_username(peer_id)
+                        return await self.storage.get_peer_by_username(username)
                     except KeyError:
                         await self.invoke(
                             raw.functions.contacts.ResolveUsername(
-                                username=peer_id
+                                username=username
                             )
                         )
 
-                        return await self.storage.get_peer_by_username(peer_id)
+                        try:
+                            return await self.storage.get_peer_by_username(peer_id)
+                        except KeyError as e:
+                            raise PeerIdInvalid from e
                 else:
                     try:
                         return await self.storage.get_peer_by_phone_number(peer_id)
                     except KeyError:
-                        raise PeerIdInvalid
+                        await self.invoke(
+                            raw.functions.contacts.ResolvePhone(
+                                phone=peer_id
+                            )
+                        )
+
+                        try:
+                            return await self.storage.get_peer_by_phone_number(peer_id)
+                        except KeyError as e:
+                            raise PeerIdInvalid from e
 
             peer_type = utils.get_peer_type(peer_id)
 
@@ -135,5 +143,5 @@ class ResolvePeer:
 
             try:
                 return await self.storage.get_peer_by_id(peer_id)
-            except KeyError:
-                raise PeerIdInvalid
+            except KeyError as e:
+                raise PeerIdInvalid from e

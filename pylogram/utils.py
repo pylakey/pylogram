@@ -22,6 +22,7 @@ import base64
 import contextlib
 import hashlib
 import os
+import re
 import struct
 import sys
 import time
@@ -401,3 +402,14 @@ async def async_perf_counter():
         end = time.perf_counter()
         elapsed_time = end - start
         print(f"Elapsed time: {elapsed_time}")
+
+
+def parse_username(username_string: str) -> str:
+    username_string = username_string.lower()
+    # Remove all valid user url components
+    # like (https://username.t.me, https://t.me/username, https://telegram.me/username)
+    username_string = re.sub(r"(http(s)?://)|(\.?t\.me/?)", "", username_string)
+    # Remove all non-username characters
+    username_string = re.sub(r"[^a-z0-9_]", "", username_string)
+
+    return username_string
