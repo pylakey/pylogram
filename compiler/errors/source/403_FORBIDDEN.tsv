@@ -4,7 +4,6 @@ CHANNEL_PUBLIC_GROUP_NA	The channel/supergroup is not available
 CHAT_ADMIN_INVITE_REQUIRED	You don't have rights to invite other users
 CHAT_ADMIN_REQUIRED	The method requires chat admin privileges
 CHAT_FORBIDDEN	You cannot write in this chat
-CHAT_GUEST_SEND_FORBIDDEN	You need to join the discussion group before commenting
 CHAT_GUEST_SEND_FORBIDDEN	You need to join the discussion group before commentingr
 CHAT_SEND_AUDIOS_FORBIDDEN	You can't send audio messages in this chat
 CHAT_SEND_DOCS_FORBIDDEN	You can't send a documents to this chat
