@@ -422,6 +422,6 @@ def calculate_pagination_hash(numbers: List[int]) -> int:
         acc ^= acc >> 21
         acc ^= acc << 35
         acc ^= acc >> 4
-        acc = (acc + number) & 0x7fffffffffffffff  # To let it not overflow a 64-bit integer
+        acc = (acc + number) & 0xffffffffffffffff  # To let it not overflow a 64-bit integer
 
     return acc
