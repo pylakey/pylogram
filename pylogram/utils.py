@@ -413,3 +413,15 @@ def parse_username(username_string: str) -> str:
     username_string = re.sub(r"[^a-z0-9_]", "", username_string)
 
     return username_string
+
+
+def calculate_pagination_hash(numbers: List[int]) -> int:
+    acc = 0
+
+    for number in numbers:
+        acc ^= acc >> 21
+        acc ^= acc << 35
+        acc ^= acc >> 4
+        acc = (acc + number) & 0x7fffffffffffffff  # To let it not overflow a 64-bit integer
+
+    return acc
