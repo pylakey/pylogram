@@ -26,6 +26,7 @@ from .game import Game
 from .location import Location
 from .message import Message
 from .message_entity import MessageEntity
+from .message_reactions import MessageReactions
 from .photo import Photo
 from .poll import Poll
 from .poll_option import PollOption
@@ -39,10 +40,29 @@ from .video_note import VideoNote
 from .voice import Voice
 from .web_app_data import WebAppData
 from .web_page import WebPage
-from .message_reactions import MessageReactions
 
 __all__ = [
-    "Animation", "Audio", "Contact", "Document", "Game", "Location", "Message", "MessageEntity", "Photo", "Thumbnail",
-    "StrippedThumbnail", "Poll", "PollOption", "Sticker", "Venue", "Video", "VideoNote", "Voice", "WebPage", "Dice",
-    "Reaction", "WebAppData", "MessageReactions"
+    "Animation",
+    "Audio",
+    "Contact",
+    "Dice",
+    "Document",
+    "Game",
+    "Location",
+    "Message",
+    "MessageEntity",
+    "MessageReactions",
+    "Photo",
+    "Poll",
+    "PollOption",
+    "Reaction",
+    "Sticker",
+    "StrippedThumbnail",
+    "Thumbnail",
+    "Venue",
+    "Video",
+    "VideoNote",
+    "Voice",
+    "WebAppData",
+    "WebPage",
 ]
