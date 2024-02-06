@@ -17,89 +17,74 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with Pylogram.  If not, see <http://www.gnu.org/licenses/>.
 
-from typing import AsyncGenerator, Optional
-
 import pylogram
-from pylogram import types, raw, utils
+from pylogram import constants
+from pylogram import raw
+from pylogram import raw_parsers
+from pylogram import utils
 
 
-class GetDialogs:
-    async def get_dialogs(
-        self: "pylogram.Client",
-        limit: int = 0
-    ) -> Optional[AsyncGenerator["types.Dialog", None]]:
-        """Get a user's dialogs sequentially.
+class LoadAllDialogs:
+    async def load_all_dialogs(self: "pylogram.Client", sleep_threshold: int = 60) -> list[pylogram.types.Dialog]:
+        async with self.dialogs_lock:
+            raw_dialogs = []
+            already_loaded_peers_ids: set[int] = set()
+            messages: dict[tuple[int, int], raw.base.Message] = {}
+            users: dict[int, raw.base.User] = {}
+            chats: dict[int, raw.base.Chat] = {}
+            total_count = constants.MAX_INT_32
+            limit = 100
+            offset_peer = raw.types.InputPeerEmpty()
+            offset_id = 0
+            offset_date = 0
 
-        .. include:: /_includes/usable-by/users.rst
+            while len(raw_dialogs) < total_count:
+                r = await self.invoke(
+                    raw.functions.messages.GetDialogs(
+                        offset_date=offset_date,
+                        offset_id=offset_id,
+                        offset_peer=offset_peer,
+                        limit=limit,
+                        hash=0,
+                        exclude_pinned=False,
+                        folder_id=None,
+                    ),
+                    sleep_threshold=sleep_threshold,
+                )
 
-        Parameters:
-            limit (``int``, *optional*):
-                Limits the number of dialogs to be retrieved.
-                By default, no limit is applied and all dialogs are returned.
+                if isinstance(r, raw.types.messages.DialogsNotModified):
+                    break
 
-        Returns:
-            ``Generator``: A generator yielding :obj:`~pylogram.types.Dialog` objects.
+                if len(r.dialogs) == 0:
+                    break
 
-        Example:
-            .. code-block:: python
+                for d in r.dialogs:
+                    if (peer_id := utils.get_peer_id(d.peer)) not in already_loaded_peers_ids:
+                        already_loaded_peers_ids.add(peer_id)
+                        raw_dialogs.append(d)
 
-                # Iterate through all dialogs
-                async for dialog in app.get_dialogs():
-                    print(dialog.chat.first_name or dialog.chat.title)
-        """
-        current = 0
-        total = limit or (1 << 31) - 1
-        limit = min(100, total)
+                messages.update({
+                    (utils.get_raw_peer_id(m.peer_id), m.id): m
+                    for m in r.messages
+                })
+                users.update({u.id: u for u in r.users})
+                chats.update({c.id: c for c in r.chats})
 
-        offset_date = 0
-        offset_id = 0
-        offset_peer = raw.types.InputPeerEmpty()
+                if isinstance(r, raw.types.messages.Dialogs):
+                    break
 
-        while True:
-            r = await self.invoke(
-                raw.functions.messages.GetDialogs(
-                    offset_date=offset_date,
-                    offset_id=offset_id,
-                    offset_peer=offset_peer,
-                    limit=limit,
-                    hash=0
-                ),
-                sleep_threshold=60
-            )
+                total_count = r.count
+                limit = min(100, total_count - len(already_loaded_peers_ids))
 
-            users = {i.id: i for i in r.users}
-            chats = {i.id: i for i in r.chats}
+                for d in reversed(r.dialogs):
+                    if d.top_message:
+                        d_top_message = messages.get((utils.get_raw_peer_id(d.peer), d.top_message))
 
-            messages = {}
+                        if bool(d_top_message):
+                            offset_peer = utils.get_dialog_input_peer(d)
+                            offset_id = d_top_message.id
+                            offset_date = d_top_message.date
+                            break
 
-            for message in r.messages:
-                if isinstance(message, raw.types.MessageEmpty):
-                    continue
-
-                chat_id = utils.get_peer_id(message.peer_id)
-                messages[chat_id] = await types.Message._parse(self, message, users, chats)
-
-            dialogs = []
-
-            for dialog in r.dialogs:
-                if not isinstance(dialog, raw.types.Dialog):
-                    continue
-
-                dialogs.append(types.Dialog._parse(self, dialog, messages, users, chats))
-
-            if not dialogs:
-                return
-
-            last = dialogs[-1]
-
-            offset_id = last.top_message.id
-            offset_date = utils.datetime_to_timestamp(last.top_message.date)
-            offset_peer = await self.resolve_peer(last.chat.id)
-
-            for dialog in dialogs:
-                yield dialog
-
-                current += 1
-
-                if current >= total:
-                    return
+            self.dialogs = raw_parsers.parse_raw_dialogs(self, raw_dialogs, messages, users, chats)
+            return self.dialogs

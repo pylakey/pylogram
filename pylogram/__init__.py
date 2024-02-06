@@ -23,7 +23,6 @@ __copyright__ = "Copyright (C) 2017-present Dan <https://github.com/delivrance>"
 
 from concurrent.futures.thread import ThreadPoolExecutor
 
-from . import connection
 from . import crypto
 from . import emoji
 from . import enums

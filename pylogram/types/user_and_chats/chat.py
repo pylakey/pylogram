@@ -18,10 +18,15 @@
 #  along with Pylogram.  If not, see <http://www.gnu.org/licenses/>.
 
 from datetime import datetime
-from typing import Union, List, Optional, AsyncGenerator, BinaryIO
+from typing import AsyncGenerator
+from typing import BinaryIO
+from typing import List
+from typing import Optional
+from typing import Union
 
 import pylogram
-from pylogram import raw, enums
+from pylogram import enums
+from pylogram import raw
 from pylogram import types
 from pylogram import utils
 from ..object import Object
@@ -133,44 +138,44 @@ class Chat(Object):
     """
 
     def __init__(
-        self,
-        *,
-        client: "pylogram.Client" = None,
-        id: int,
-        type: "enums.ChatType",
-        is_verified: bool = None,
-        is_restricted: bool = None,
-        is_creator: bool = None,
-        is_scam: bool = None,
-        is_fake: bool = None,
-        is_support: bool = None,
-        is_forum: bool = None,
-        view_forum_as_messages: bool = None,
-        title: str = None,
-        username: str = None,
-        usernames: List["types.Username"] = None,
-        first_name: str = None,
-        last_name: str = None,
-        photo: "types.ChatPhoto" = None,
-        bio: str = None,
-        description: str = None,
-        dc_id: int = None,
-        has_protected_content: bool = None,
-        invite_link: str = None,
-        pinned_message=None,
-        sticker_set_name: str = None,
-        can_set_sticker_set: bool = None,
-        members_count: int = None,
-        restrictions: List["types.Restriction"] = None,
-        permissions: "types.ChatPermissions" = None,
-        distance: int = None,
-        linked_chat: "types.Chat" = None,
-        send_as_chat: "types.Chat" = None,
-        available_reactions: Optional["types.ChatReactions"] = None,
-        color: Optional["raw.types.PeerColor"] = None,
-        profile_color: Optional["raw.types.PeerColor"] = None,
-        emoji_status: Optional["raw.base.EmojiStatus"] = None,
-        level: Optional[int] = None,
+            self,
+            *,
+            client: "pylogram.Client" = None,
+            id: int,
+            type: "enums.ChatType",
+            is_verified: bool = None,
+            is_restricted: bool = None,
+            is_creator: bool = None,
+            is_scam: bool = None,
+            is_fake: bool = None,
+            is_support: bool = None,
+            is_forum: bool = None,
+            view_forum_as_messages: bool = None,
+            title: str = None,
+            username: str = None,
+            usernames: List["types.Username"] = None,
+            first_name: str = None,
+            last_name: str = None,
+            photo: "types.ChatPhoto" = None,
+            bio: str = None,
+            description: str = None,
+            dc_id: int = None,
+            has_protected_content: bool = None,
+            invite_link: str = None,
+            pinned_message=None,
+            sticker_set_name: str = None,
+            can_set_sticker_set: bool = None,
+            members_count: int = None,
+            restrictions: List["types.Restriction"] = None,
+            permissions: "types.ChatPermissions" = None,
+            distance: int = None,
+            linked_chat: "types.Chat" = None,
+            send_as_chat: "types.Chat" = None,
+            available_reactions: Optional["types.ChatReactions"] = None,
+            color: Optional["raw.types.PeerColor"] = None,
+            profile_color: Optional["raw.types.PeerColor"] = None,
+            emoji_status: Optional["raw.base.EmojiStatus"] = None,
+            level: Optional[int] = None,
     ):
         super().__init__(client)
 
@@ -253,16 +258,13 @@ class Chat(Object):
         )
 
     @staticmethod
-    def _parse_channel_full_chat(client, channel_full: raw.types.ChannelFull):
-        peer_id = utils.get_channel_id(channel_full.id)
-
-
-    @staticmethod
     def _parse_channel_chat(client, channel: raw.types.Channel) -> "Chat":
         peer_id = utils.get_channel_id(channel.id)
         restriction_reason = getattr(channel, "restriction_reason", [])
+        usernames = getattr(channel, "usernames", [])
 
         return Chat(
+            client=client,
             id=peer_id,
             type=enums.ChatType.SUPERGROUP if getattr(channel, "megagroup", None) else enums.ChatType.CHANNEL,
             is_verified=getattr(channel, "verified", None),
@@ -274,7 +276,7 @@ class Chat(Object):
             view_forum_as_messages=getattr(channel, "view_forum_as_messages", None),
             title=channel.title,
             username=getattr(channel, "username", None),
-            usernames=types.List([types.Username._parse(u) for u in channel.usernames]) or [],
+            usernames=types.List([types.Username._parse(u) for u in usernames]) or [],
             photo=types.ChatPhoto._parse(
                 client,
                 getattr(channel, "photo", None),
@@ -286,7 +288,6 @@ class Chat(Object):
             members_count=getattr(channel, "participants_count", None),
             dc_id=getattr(getattr(channel, "photo", None), "dc_id", None),
             has_protected_content=getattr(channel, "noforwards", None),
-            client=client,
             color=getattr(channel, 'color', None),
             profile_color=getattr(channel, 'profile_color', None),
             emoji_status=getattr(channel, 'emoji_status', None),
@@ -295,11 +296,11 @@ class Chat(Object):
 
     @staticmethod
     def _parse(
-        client,
-        message: Union[raw.types.Message, raw.types.MessageService],
-        users: dict,
-        chats: dict,
-        is_chat: bool
+            client,
+            message: Union[raw.types.Message, raw.types.MessageService],
+            users: dict,
+            chats: dict,
+            is_chat: bool
     ) -> "Chat":
         from_id = utils.get_raw_peer_id(message.from_id)
         peer_id = utils.get_raw_peer_id(message.peer_id)
@@ -514,11 +515,11 @@ class Chat(Object):
         )
 
     async def set_photo(
-        self,
-        *,
-        photo: Union[str, BinaryIO] = None,
-        video: Union[str, BinaryIO] = None,
-        video_start_ts: float = None,
+            self,
+            *,
+            photo: Union[str, BinaryIO] = None,
+            video: Union[str, BinaryIO] = None,
+            video_start_ts: float = None,
     ) -> bool:
         """Bound method *set_photo* of :obj:`~pylogram.types.Chat`.
 
@@ -577,9 +578,9 @@ class Chat(Object):
         )
 
     async def ban_member(
-        self,
-        user_id: Union[int, str],
-        until_date: datetime = utils.zero_datetime()
+            self,
+            user_id: Union[int, str],
+            until_date: datetime = utils.zero_datetime()
     ) -> Union["types.Message", bool]:
         """Bound method *ban_member* of :obj:`~pylogram.types.Chat`.
 
@@ -627,8 +628,8 @@ class Chat(Object):
         )
 
     async def unban_member(
-        self,
-        user_id: Union[int, str]
+            self,
+            user_id: Union[int, str]
     ) -> bool:
         """Bound method *unban_member* of :obj:`~pylogram.types.Chat`.
 
@@ -664,10 +665,10 @@ class Chat(Object):
         )
 
     async def restrict_member(
-        self,
-        user_id: Union[int, str],
-        permissions: "types.ChatPermissions",
-        until_date: datetime = utils.zero_datetime(),
+            self,
+            user_id: Union[int, str],
+            permissions: "types.ChatPermissions",
+            until_date: datetime = utils.zero_datetime(),
     ) -> "types.Chat":
         """Bound method *unban_member* of :obj:`~pylogram.types.Chat`.
 
@@ -716,9 +717,9 @@ class Chat(Object):
     # Set None as privileges default due to issues with partially initialized module, because at the time Chat
     # is being initialized, ChatPrivileges would be required here, but was not initialized yet.
     async def promote_member(
-        self,
-        user_id: Union[int, str],
-        privileges: "types.ChatPrivileges" = None
+            self,
+            user_id: Union[int, str],
+            privileges: "types.ChatPrivileges" = None
     ) -> bool:
         """Bound method *promote_member* of :obj:`~pylogram.types.Chat`.
 
@@ -828,8 +829,8 @@ class Chat(Object):
         return await self._client.export_chat_invite_link(self.id)
 
     async def get_member(
-        self,
-        user_id: Union[int, str],
+            self,
+            user_id: Union[int, str],
     ) -> "types.ChatMember":
         """Bound method *get_member* of :obj:`~pylogram.types.Chat`.
 
@@ -857,10 +858,10 @@ class Chat(Object):
         )
 
     def get_members(
-        self,
-        query: str = "",
-        limit: int = 0,
-        filter: "enums.ChatMembersFilter" = enums.ChatMembersFilter.SEARCH
+            self,
+            query: str = "",
+            limit: int = 0,
+            filter: "enums.ChatMembersFilter" = enums.ChatMembersFilter.SEARCH
     ) -> Optional[AsyncGenerator["types.ChatMember", None]]:
         """Bound method *get_members* of :obj:`~pylogram.types.Chat`.
 
@@ -904,9 +905,9 @@ class Chat(Object):
         )
 
     async def add_members(
-        self,
-        user_ids: Union[Union[int, str], List[Union[int, str]]],
-        forward_limit: int = 100
+            self,
+            user_ids: Union[Union[int, str], List[Union[int, str]]],
+            forward_limit: int = 100
     ) -> bool:
         """Bound method *add_members* of :obj:`~pylogram.types.Chat`.
 

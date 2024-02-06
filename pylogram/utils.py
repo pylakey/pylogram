@@ -425,3 +425,22 @@ def calculate_pagination_hash(numbers: List[int]) -> int:
         acc = (acc + number) & 0xffffffffffffffff  # To let it not overflow a 64-bit integer
 
     return acc
+
+
+def get_dialog_input_peer(dialog: raw.types.Dialog) -> raw.base.InputPeer:
+    if isinstance(dialog.peer, raw.types.PeerUser):
+        return raw.types.InputPeerUser(
+            user_id=dialog.peer.user_id,
+            access_hash=0,
+        )
+    elif isinstance(dialog.peer, raw.types.PeerChat):
+        return raw.types.InputPeerChat(
+            chat_id=dialog.peer.chat_id,
+        )
+    elif isinstance(dialog.peer, raw.types.PeerChannel):
+        return raw.types.InputPeerChannel(
+            channel_id=dialog.peer.channel_id,
+            access_hash=0,
+        )
+    else:
+        raise ValueError(f"Unknown peer type: {dialog.peer}")

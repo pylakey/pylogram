@@ -57,6 +57,7 @@ from pylogram.session import Auth
 from pylogram.session import Session
 from pylogram.storage import FileStorage
 from pylogram.storage import MemoryStorage
+from pylogram.types import Dialog
 from pylogram.types import TermsOfService
 from pylogram.types import User
 from pylogram.utils import ainput
@@ -308,6 +309,8 @@ class Client(Methods):
         self.last_update_time = datetime.now()
         self.loop = asyncio.get_event_loop()
         self.ignore_channel_updates_except = ignore_channel_updates_except
+        self.dialogs: List[Dialog] = []
+        self.dialogs_lock: asyncio.Lock = asyncio.Lock()
 
     def __enter__(self):
         return self.start()

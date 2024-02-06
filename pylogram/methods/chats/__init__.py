@@ -33,7 +33,7 @@ from .get_chat_member import GetChatMember
 from .get_chat_members import GetChatMembers
 from .get_chat_members_count import GetChatMembersCount
 from .get_chat_online_count import GetChatOnlineCount
-from .get_dialogs import GetDialogs
+from .get_dialogs import LoadAllDialogs
 from .get_dialogs_count import GetDialogsCount
 from .get_nearby_chats import GetNearbyChats
 from .get_send_as_chats import GetSendAsChats
@@ -59,44 +59,44 @@ from .unpin_chat_message import UnpinChatMessage
 
 
 class Chats(
-    GetChat,
-    LeaveChat,
-    JoinChat,
-    BanChatMember,
-    UnbanChatMember,
-    RestrictChatMember,
-    PromoteChatMember,
-    GetChatMembers,
-    GetChatMember,
-    SetChatPhoto,
-    DeleteChatPhoto,
-    SetChatTitle,
-    SetChatDescription,
-    PinChatMessage,
-    UnpinChatMessage,
-    GetDialogs,
-    GetChatMembersCount,
-    SetChatUsername,
-    SetChatPermissions,
-    GetDialogsCount,
+    AddChatMembers,
     ArchiveChats,
-    UnarchiveChats,
+    BanChatMember,
+    CreateChannel,
     CreateGroup,
     CreateSupergroup,
-    CreateChannel,
-    AddChatMembers,
     DeleteChannel,
+    DeleteChatPhoto,
     DeleteSupergroup,
-    GetNearbyChats,
-    SetAdministratorTitle,
-    SetSlowMode,
     DeleteUserHistory,
-    UnpinAllChatMessages,
-    MarkChatUnread,
+    GetChat,
     GetChatEventLog,
+    GetChatMember,
+    GetChatMembers,
+    GetChatMembersCount,
     GetChatOnlineCount,
+    LoadAllDialogs,
+    GetDialogsCount,
+    GetNearbyChats,
     GetSendAsChats,
+    JoinChat,
+    LeaveChat,
+    MarkChatUnread,
+    PinChatMessage,
+    PromoteChatMember,
+    RestrictChatMember,
+    SetAdministratorTitle,
+    SetChatDescription,
+    SetChatPermissions,
+    SetChatPhoto,
+    SetChatProtectedContent,
+    SetChatTitle,
+    SetChatUsername,
     SetSendAsChat,
-    SetChatProtectedContent
+    SetSlowMode,
+    UnarchiveChats,
+    UnbanChatMember,
+    UnpinAllChatMessages,
+    UnpinChatMessage,
 ):
     pass
