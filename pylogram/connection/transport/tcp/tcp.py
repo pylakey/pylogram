@@ -93,7 +93,7 @@ class TCP:
                 await asyncio.wait_for(self.writer.wait_closed(), timeout=TCP.TIMEOUT)
             except (asyncio.TimeoutError, TimeoutError):
                 log.warning('Graceful disconnection timed out, forcibly ignoring cleanup')
-            except BaseException as e:
+            except Exception as e:
                 log.warning('%s during disconnect: %s', type(e).__name__, e)
 
     async def send(self, data: bytes):
@@ -102,7 +102,7 @@ class TCP:
                 if self.writer is not None:
                     self.writer.write(data)
                     await self.writer.drain()
-            except BaseException as e:
+            except Exception as e:
                 log.info("Send exception: %s %s", type(e).__name__, e)
                 raise OSError(e) from e
 

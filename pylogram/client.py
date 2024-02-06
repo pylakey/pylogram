@@ -770,7 +770,7 @@ class Client(Methods):
         try:
             async for chunk in self.get_file(file_id, file_size, 0, 0, progress, progress_args):
                 file.write(chunk)
-        except BaseException as e:
+        except Exception as e:
             if not in_memory:
                 file.close()
                 os.remove(temp_file_path)
