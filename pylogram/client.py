@@ -408,7 +408,7 @@ class Client(Methods):
         phone_code = await self.fetch_phone_code()
 
         try:
-            signed_in = await self.sign_in(self.phone_number, sent_code.phone_code_hash, phone_code)
+            signed_in = await self.sign_in(phone_number, sent_code.phone_code_hash, phone_code)
         except SessionPasswordNeeded as e:
             log.info(e.MESSAGE)
             password_info = await self.invoke(raw.functions.account.GetPassword())
