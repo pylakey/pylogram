@@ -18,22 +18,30 @@
 #  along with Pylogram.  If not, see <http://www.gnu.org/licenses/>.
 
 from datetime import datetime
-from typing import Union, List, Iterable
+from typing import Iterable
+from typing import List
+from typing import Union
 
 import pylogram
-from pylogram import raw, utils
+from pylogram import raw
 from pylogram import types
+from pylogram import utils
 
 
 class ForwardMessages:
     async def forward_messages(
-        self: "pylogram.Client",
-        chat_id: Union[int, str],
-        from_chat_id: Union[int, str],
-        message_ids: Union[int, Iterable[int]],
-        disable_notification: bool = None,
-        schedule_date: datetime = None,
-        protect_content: bool = None
+            self: "pylogram.Client",
+            chat_id: Union[int, str],
+            from_chat_id: Union[int, str],
+            message_ids: Union[int, Iterable[int]],
+            disable_notification: bool = None,
+            schedule_date: datetime = None,
+            protect_content: bool = None,
+            background: bool = None,
+            with_my_score: bool = None,
+            drop_author: bool = None,
+            drop_media_captions: bool = None,
+            send_as: Union[int, str] = None,
     ) -> Union["types.Message", List["types.Message"]]:
         """Forward messages of any kind.
 
@@ -63,6 +71,21 @@ class ForwardMessages:
             protect_content (``bool``, *optional*):
                 Protects the contents of the sent message from forwarding and saving.
 
+            background (``bool``, *optional*):
+                Whether to send the message in background.
+
+            with_my_score (``bool``, *optional*):
+                When forwarding games, whether to include your score in the game.
+
+            drop_author (``bool``, *optional*):
+                Whether to forward messages without quoting the original author.
+
+            drop_media_captions (``bool``, *optional*):
+                Whether to strip captions from media.
+
+            send_as (``int`` | ``str``, *optional*):
+                Forward the messages as the specified user or chat.
+
         Returns:
             :obj:`~pylogram.types.Message` | List of :obj:`~pylogram.types.Message`: In case *message_ids* was not
             a list, a single message is returned, otherwise a list of messages is returned.
@@ -80,6 +103,9 @@ class ForwardMessages:
         is_iterable = not isinstance(message_ids, int)
         message_ids = list(message_ids) if is_iterable else [message_ids]
 
+        if bool(send_as):
+            send_as = await self.resolve_peer(send_as)
+
         r = await self.invoke(
             raw.functions.messages.ForwardMessages(
                 to_peer=await self.resolve_peer(chat_id),
@@ -88,7 +114,12 @@ class ForwardMessages:
                 silent=disable_notification or None,
                 random_id=[self.rnd_id() for _ in message_ids],
                 schedule_date=utils.datetime_to_timestamp(schedule_date),
-                noforwards=protect_content
+                noforwards=protect_content,
+                background=background,
+                with_my_score=with_my_score,
+                drop_author=drop_author,
+                drop_media_captions=drop_media_captions,
+                send_as=send_as
             )
         )
 

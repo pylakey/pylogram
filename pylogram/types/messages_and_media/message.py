@@ -2944,7 +2944,13 @@ class Message(Object, Update):
         self,
         chat_id: Union[int, str],
         disable_notification: bool = None,
-        schedule_date: datetime = None
+        schedule_date: datetime = None,
+        protect_content: bool = None,
+        background: bool = None,
+        with_my_score: bool = None,
+        drop_author: bool = None,
+        drop_media_captions: bool = None,
+        send_as: Union[int, str] = None,
     ) -> Union["types.Message", List["types.Message"]]:
         """Bound method *forward* of :obj:`~pylogram.types.Message`.
 
@@ -2976,6 +2982,24 @@ class Message(Object, Update):
             schedule_date (:py:obj:`~datetime.datetime`, *optional*):
                 Date when the message will be automatically sent.
 
+            protect_content (``bool``, *optional*):
+                Protects the contents of the sent message from forwarding and saving.
+
+            background (``bool``, *optional*):
+                Whether to send the message in background.
+
+            with_my_score (``bool``, *optional*):
+                When forwarding games, whether to include your score in the game.
+
+            drop_author (``bool``, *optional*):
+                Whether to forward messages without quoting the original author.
+
+            drop_media_captions (``bool``, *optional*):
+                Whether to strip captions from media.
+
+            send_as (``int`` | ``str``, *optional*):
+                Forward the messages as the specified user or chat.
+
         Returns:
             On success, the forwarded Message is returned.
 
@@ -2987,7 +3011,13 @@ class Message(Object, Update):
             from_chat_id=self.chat.id,
             message_ids=self.id,
             disable_notification=disable_notification,
-            schedule_date=schedule_date
+            schedule_date=schedule_date,
+            protect_content=protect_content,
+            background=background,
+            with_my_score=with_my_score,
+            drop_author=drop_author,
+            drop_media_captions=drop_media_captions,
+            send_as=send_as,
         )
 
     async def copy(
