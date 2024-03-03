@@ -14,6 +14,10 @@
 
 # Pylogram
 
+[![PyPI version shields.io](https://img.shields.io/pypi/v/pylogram.svg)](https://pypi.python.org/pypi/pylogram/)
+[![PyPI pyversions](https://img.shields.io/pypi/pyversions/pylogram.svg)](https://pypi.python.org/pypi/pylogram/)
+[![PyPI license](https://img.shields.io/pypi/l/pylogram.svg)](https://pypi.python.org/pypi/pylogram/)
+
 > Elegant, modern and asynchronous Telegram MTProto API framework in Python for users and bots
 
 ``` python
