@@ -67,7 +67,7 @@ class Object:
                 attr: getattr(obj, attr)
                 for attr in filter(
                     lambda x: not x.startswith("_"),
-                    getattr(obj, '__dict__', getattr(obj, '__slots__')) or {}
+                    getattr(obj, '__dict__', getattr(obj, '__slots__', {})) or {}
                 )
                 if getattr(obj, attr) is not None
             }
