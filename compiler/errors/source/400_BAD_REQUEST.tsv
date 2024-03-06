@@ -18,7 +18,10 @@ AUTOARCHIVE_NOT_AVAILABLE	This feature is not yet enabled for your account due t
 BANK_CARD_NUMBER_INVALID	The credit card number is invalid
 BANNED_RIGHTS_INVALID	You provided a set of restrictions that is invalid
 BASE_PORT_LOC_INVALID	The base port location is invalid
-BOOSTS_REQUIRED	Channel required more boost to upload a story
+BOOST_NOT_MODIFIED	You're already boosting the specified channel
+BOOST_PEER_INVALID	The specified `boost_peer` is invalid
+BOOSTS_EMPTY	No boost slots were specified
+BOOSTS_REQUIRED	The specified channel must first be boosted in order to perform this action
 BOT_CHANNELS_NA	Bots can't edit admin privileges
 BOT_COMMAND_DESCRIPTION_INVALID	The command description was empty, too long or had invalid characters
 BOT_DOMAIN_INVALID	The domain used for the auth button does not match the one configured in @BotFather
