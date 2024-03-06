@@ -297,6 +297,7 @@ SESSION_TOO_FRESH_X	You can't do this action because the current session was log
 SETTINGS_INVALID	Invalid settings were provided
 SHA256_HASH_INVALID	The provided SHA256 hash is invalid
 SHORTNAME_OCCUPY_FAILED	An error occurred when trying to register the short-name used for the sticker pack. Try a different name
+SLOTS_EMPTY	The specified slot list is empty
 SLOWMODE_MULTI_MSGS_DISABLED	Slowmode is enabled, you cannot forward multiple messages to this group
 SMS_CODE_CREATE_FAILED	An error occurred while creating the SMS code
 SRP_ID_INVALID	Invalid SRP ID provided
