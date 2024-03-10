@@ -20,6 +20,7 @@
 from .advanced import Advanced
 from .auth import Auth
 from .bots import Bots
+from .business import Business
 from .chats import Chats
 from .contacts import Contacts
 from .decorators import Decorators
@@ -35,6 +36,7 @@ class Methods(
     Advanced,
     Auth,
     Bots,
+    Business,
     Chats,
     Contacts,
     Decorators,
