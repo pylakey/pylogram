@@ -77,7 +77,7 @@ setup(
     project_urls={
         "Source": "https://github.com/pylakey/pylogram",
     },
-    python_requires="~=3.9",
+    python_requires="~=3.10",
     package_data={
         "pylogram": ["py.typed"],
     },
