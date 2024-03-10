@@ -26,6 +26,7 @@ from .decorators import Decorators
 from .invite_links import InviteLinks
 from .messages import Messages
 from .password import Password
+from .premium import Premium
 from .users import Users
 from .utilities import Utilities
 
@@ -34,13 +35,14 @@ class Methods(
     Advanced,
     Auth,
     Bots,
-    Contacts,
-    Password,
     Chats,
-    Users,
-    Messages,
+    Contacts,
     Decorators,
-    Utilities,
     InviteLinks,
+    Messages,
+    Password,
+    Premium,
+    Users,
+    Utilities,
 ):
     pass
