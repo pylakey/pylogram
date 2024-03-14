@@ -24,6 +24,7 @@ from .business import Business
 from .chats import Chats
 from .contacts import Contacts
 from .decorators import Decorators
+from .forums import Forums
 from .invite_links import InviteLinks
 from .messages import Messages
 from .password import Password
@@ -40,6 +41,7 @@ class Methods(
     Chats,
     Contacts,
     Decorators,
+    Forums,
     InviteLinks,
     Messages,
     Password,

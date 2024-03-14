@@ -2951,6 +2951,7 @@ class Message(Object, Update):
         drop_author: bool = None,
         drop_media_captions: bool = None,
         send_as: Union[int, str] = None,
+        top_msg_id: int | None = None
     ) -> Union["types.Message", List["types.Message"]]:
         """Bound method *forward* of :obj:`~pylogram.types.Message`.
 
@@ -3000,6 +3001,9 @@ class Message(Object, Update):
             send_as (``int`` | ``str``, *optional*):
                 Forward the messages as the specified user or chat.
 
+            top_msg_id (``int`` | ``str``, *optional*):
+                Forward the messages to specified topic id of forum.
+
         Returns:
             On success, the forwarded Message is returned.
 
@@ -3018,6 +3022,7 @@ class Message(Object, Update):
             drop_author=drop_author,
             drop_media_captions=drop_media_captions,
             send_as=send_as,
+            top_msg_id=top_msg_id,
         )
 
     async def copy(

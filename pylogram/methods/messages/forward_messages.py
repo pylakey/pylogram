@@ -42,6 +42,7 @@ class ForwardMessages:
             drop_author: bool = None,
             drop_media_captions: bool = None,
             send_as: Union[int, str] = None,
+            top_msg_id: int | None = None,
     ) -> Union["types.Message", List["types.Message"]]:
         """Forward messages of any kind.
 
@@ -86,6 +87,9 @@ class ForwardMessages:
             send_as (``int`` | ``str``, *optional*):
                 Forward the messages as the specified user or chat.
 
+            top_msg_id (``int`` | ``str``, *optional*):
+                Forward the messages to specified topic id of forum.
+
         Returns:
             :obj:`~pylogram.types.Message` | List of :obj:`~pylogram.types.Message`: In case *message_ids* was not
             a list, a single message is returned, otherwise a list of messages is returned.
@@ -119,7 +123,8 @@ class ForwardMessages:
                 with_my_score=with_my_score,
                 drop_author=drop_author,
                 drop_media_captions=drop_media_captions,
-                send_as=send_as
+                send_as=send_as,
+                top_msg_id=top_msg_id
             )
         )
 
