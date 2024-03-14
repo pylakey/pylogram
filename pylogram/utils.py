@@ -21,6 +21,7 @@ import asyncio
 import base64
 import contextlib
 import hashlib
+import logging
 import os
 import re
 import struct
@@ -393,7 +394,7 @@ def datetime_to_timestamp(dt: Optional[datetime]) -> Optional[int]:
 
 
 @contextlib.asynccontextmanager
-async def async_perf_counter():
+async def async_perf_counter(context: str = ""):
     start = time.perf_counter()
 
     try:
@@ -401,7 +402,7 @@ async def async_perf_counter():
     finally:
         end = time.perf_counter()
         elapsed_time = end - start
-        print(f"Elapsed time: {elapsed_time}")
+        logging.info(f"[{context}] Elapsed time: {elapsed_time}")
 
 
 def parse_username(username_string: str) -> str:

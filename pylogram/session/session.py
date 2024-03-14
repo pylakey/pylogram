@@ -127,12 +127,12 @@ class Session:
                             layer=layer,
                             query=raw.functions.InitConnection(
                                 api_id=api_id,
-                                app_version=self.client.app_version,
                                 device_model=self.client.device_model,
                                 system_version=self.client.system_version,
+                                app_version=self.client.app_version,
                                 system_lang_code=self.client.system_lang_code,
-                                lang_code=self.client.lang_code,
                                 lang_pack=self.client.lang_pack or "",
+                                lang_code=self.client.lang_code,
                                 query=raw.functions.help.GetConfig(),
                             )
                         ),
@@ -195,20 +195,14 @@ class Session:
         return t
 
     async def handle_packet(self, packet):
-        data = mtproto.unpack(
+        data = await self.loop.run_in_executor(
+            pylogram.crypto_executor,
+            mtproto.unpack,
             BytesIO(packet),
             self.session_id,
             self.auth_key,
             self.auth_key_id
         )
-        # data = await self.loop.run_in_executor(
-        #     pylogram.crypto_executor,
-        #     mtproto.unpack,
-        #     BytesIO(packet),
-        #     self.session_id,
-        #     self.auth_key,
-        #     self.auth_key_id
-        # )
 
         messages = (
             data.body.messages
@@ -339,22 +333,22 @@ class Session:
             self.results[msg_id] = Result()
 
         log.debug("Sent: %s", message)
-        payload = mtproto.pack(
-            message,
-            self.salt,
-            self.session_id,
-            self.auth_key,
-            self.auth_key_id
-        )
-        # payload = await self.loop.run_in_executor(
-        #     pylogram.crypto_executor,
-        #     mtproto.pack,
+        # payload = mtproto.pack(
         #     message,
         #     self.salt,
         #     self.session_id,
         #     self.auth_key,
         #     self.auth_key_id
         # )
+        payload = await self.loop.run_in_executor(
+            pylogram.crypto_executor,
+            mtproto.pack,
+            message,
+            self.salt,
+            self.session_id,
+            self.auth_key,
+            self.auth_key_id
+        )
 
         try:
             await self.connection.send(payload)
