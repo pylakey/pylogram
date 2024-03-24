@@ -18,6 +18,7 @@
 #  along with Pylogram.  If not, see <http://www.gnu.org/licenses/>.
 
 import pylogram
+import pylogram.peers
 from pylogram import constants
 from pylogram import raw
 from pylogram import raw_parsers
@@ -39,7 +40,7 @@ class LoadAllDialogs:
             offset_date = 0
 
             while len(raw_dialogs) < total_count:
-                r = await self.invoke(
+                r: raw.base.messages.Dialogs = await self.invoke(
                     raw.functions.messages.GetDialogs(
                         offset_date=offset_date,
                         offset_id=offset_id,
@@ -81,7 +82,7 @@ class LoadAllDialogs:
                         d_top_message = messages.get((utils.get_raw_peer_id(d.peer), d.top_message))
 
                         if bool(d_top_message):
-                            offset_peer = utils.get_dialog_input_peer(d)
+                            offset_peer = pylogram.peers.get_dialog_input_peer(d, users=r.users, chats=r.chats)
                             offset_id = d_top_message.id
                             offset_date = d_top_message.date
                             break

@@ -475,7 +475,7 @@ class Client(Methods):
 
         self.parse_mode = parse_mode
 
-    async def fetch_peers(self, peers: List[Union[raw.types.User, raw.types.Chat, raw.types.Channel]]) -> bool:
+    async def update_storage_peers(self, peers: List[Union[raw.base.User, raw.base.Chat]]) -> bool:
         is_min = False
         parsed_peers = []
 
@@ -497,10 +497,8 @@ class Client(Methods):
                 )
                 phone_number = peer.phone
                 peer_type = "bot" if peer.bot else "user"
-            elif isinstance(peer, (raw.types.Chat, raw.types.ChatForbidden)):
-                peer_id = -peer.id
-                access_hash = 0
-                peer_type = "group"
+            elif isinstance(peer, raw.types.UserEmpty):
+                continue
             elif isinstance(peer, raw.types.Channel):
                 peer_id = utils.get_channel_id(peer.id)
                 access_hash = peer.access_hash
@@ -514,6 +512,12 @@ class Client(Methods):
                 peer_id = utils.get_channel_id(peer.id)
                 access_hash = peer.access_hash
                 peer_type = "channel" if peer.broadcast else "supergroup"
+            elif isinstance(peer, (raw.types.Chat, raw.types.ChatForbidden)):
+                peer_id = -peer.id
+                access_hash = 0
+                peer_type = "group"
+            elif isinstance(peer, raw.types.ChatEmpty):
+                continue
             else:
                 continue
 
@@ -528,8 +532,8 @@ class Client(Methods):
 
         if isinstance(updates, (raw.types.Updates, raw.types.UpdatesCombined)):
             is_min = any((
-                await self.fetch_peers(updates.users),
-                await self.fetch_peers(updates.chats),
+                await self.update_storage_peers(updates.users),
+                await self.update_storage_peers(updates.chats),
             ))
 
             users = {u.id: u for u in updates.users}

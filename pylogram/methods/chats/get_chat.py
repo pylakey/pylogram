@@ -27,8 +27,8 @@ from pylogram import utils
 
 class GetChat:
     async def get_chat(
-        self: "pylogram.Client",
-        chat_id: Union[int, str]
+            self: "pylogram.Client",
+            chat_id: Union[int, str]
     ) -> Union["types.Chat", "types.ChatPreview"]:
         """Get up to date information about a chat.
 
@@ -68,7 +68,7 @@ class GetChat:
             if isinstance(r, raw.types.ChatInvite):
                 return types.ChatPreview._parse(self, r)
 
-            await self.fetch_peers([r.chat])
+            await self.update_storage_peers([r.chat])
 
             if isinstance(r.chat, raw.types.Chat):
                 chat_id = -r.chat.id
@@ -79,9 +79,27 @@ class GetChat:
         peer = await self.resolve_peer(chat_id)
 
         if isinstance(peer, raw.types.InputPeerChannel):
-            r = await self.invoke(raw.functions.channels.GetFullChannel(channel=peer))
+            r = await self.invoke(
+                raw.functions.channels.GetFullChannel(
+                    channel=raw.types.InputChannel(
+                        channel_id=peer.channel_id,
+                        access_hash=peer.access_hash
+                    )
+                )
+            )
         elif isinstance(peer, (raw.types.InputPeerUser, raw.types.InputPeerSelf)):
-            r = await self.invoke(raw.functions.users.GetFullUser(id=peer))
+            r = await self.invoke(
+                raw.functions.users.GetFullUser(
+                    id=(
+                        peer
+                        if isinstance(peer, raw.types.InputPeerUser)
+                        else raw.types.InputUser(
+                            user_id=peer.user_id,
+                            access_hash=peer.access_hash
+                        )
+                    )
+                )
+            )
         else:
             r = await self.invoke(raw.functions.messages.GetFullChat(chat_id=peer.chat_id))
 

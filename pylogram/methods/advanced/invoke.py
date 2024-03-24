@@ -29,11 +29,11 @@ log = logging.getLogger(__name__)
 
 class Invoke:
     async def invoke(
-        self: "pylogram.Client",
-        query: TLObject,
-        retries: int = Session.MAX_RETRIES,
-        timeout: float = Session.WAIT_TIMEOUT,
-        sleep_threshold: float = None
+            self: "pylogram.Client",
+            query: TLObject,
+            retries: int = Session.MAX_RETRIES,
+            timeout: float = Session.WAIT_TIMEOUT,
+            sleep_threshold: float = None
     ):
         """Invoke raw Telegram functions.
 
@@ -84,7 +84,7 @@ class Invoke:
              else self.sleep_threshold)
         )
 
-        await self.fetch_peers(getattr(r, "users", []))
-        await self.fetch_peers(getattr(r, "chats", []))
+        await self.update_storage_peers(getattr(r, "users", []))
+        await self.update_storage_peers(getattr(r, "chats", []))
 
         return r

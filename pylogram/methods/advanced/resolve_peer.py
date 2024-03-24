@@ -24,14 +24,123 @@ import pylogram
 from pylogram import raw
 from pylogram import utils
 from pylogram.errors import PeerIdInvalid
+from pylogram.peers import get_chat_input_peer
+from pylogram.peers import get_resolved_peer_input_peer
+from pylogram.peers import get_user_input_peer
 
 log = logging.getLogger(__name__)
 
 
 class ResolvePeer:
+
+    async def _resolve_peer_by_id(
+            self: "pylogram.Client",
+            peer_id: int,
+            cache_only: bool = False
+    ) -> raw.base.InputPeer:
+        try:
+            return await self.storage.get_peer_by_id(peer_id)
+        except KeyError:
+            if cache_only:
+                raise
+
+            peer_type = utils.get_peer_type(peer_id)
+
+            if peer_type == "user":
+                users: list[raw.base.User] = await self.invoke(
+                    raw.functions.users.GetUsers(
+                        id=[
+                            raw.types.InputUser(
+                                user_id=peer_id,
+                                access_hash=0
+                            )
+                        ]
+                    )
+                )
+                await self.update_storage_peers(users)
+                return get_user_input_peer(users[0])
+            elif peer_type == "chat":
+                chats: raw.base.messages.Chats = await self.invoke(
+                    raw.functions.messages.GetChats(
+                        id=[-peer_id]
+                    )
+                )
+                await self.update_storage_peers(chats.chats)
+                return get_chat_input_peer(chats.chats[0])
+            elif peer_type == "channel":
+                chats: raw.base.messages.Chats = await self.invoke(
+                    raw.functions.channels.GetChannels(
+                        id=[
+                            raw.types.InputChannel(
+                                channel_id=utils.get_channel_id(peer_id),
+                                access_hash=0
+                            )
+                        ]
+                    )
+                )
+                await self.update_storage_peers(chats.chats)
+                return get_chat_input_peer(chats.chats[0])
+
+        raise ValueError(f"Invalid peer id: {peer_id}")
+
+    async def _resolve_peer_by_username(
+            self: "pylogram.Client",
+            username: str,
+            cache_only: bool = False
+    ) -> raw.base.InputPeer | None:
+        try:
+            return await self.storage.get_peer_by_username(username)
+        except KeyError:
+            if cache_only:
+                raise
+
+            resolved_peer = await self.invoke(
+                raw.functions.contacts.ResolveUsername(
+                    username=username
+                )
+            )
+            return get_resolved_peer_input_peer(resolved_peer)
+
+    async def _resolve_peer_by_phone_number(
+            self: "pylogram.Client",
+            phone_number: str,
+            cache_only: bool = False
+    ) -> raw.base.InputPeer | None:
+        try:
+            return await self.storage.get_peer_by_phone_number(phone_number)
+        except KeyError:
+            if cache_only:
+                raise
+
+            resolved_peer = await self.invoke(
+                raw.functions.contacts.ResolvePhone(
+                    phone=phone_number
+                )
+            )
+            return get_resolved_peer_input_peer(resolved_peer)
+
+    async def _resolve_peer_by_invite_hash(self: "pylogram.Client", invite_hash: str, cache_only: bool = False):
+        if cache_only:
+            # Cache only is not supported for invite links
+            raise KeyError(f"Invite link https://t.me/+{invite_hash} not found in cache")
+
+        r: raw.base.ChatInvite = await self.invoke(
+            raw.functions.messages.CheckChatInvite(
+                hash=invite_hash
+            )
+        )
+
+        if isinstance(r, raw.types.ChatInvite):
+            raise ValueError(f"Invite link https://t.me/+{invite_hash} points to a chat you haven't joined yet")
+
+        await self.update_storage_peers([r.chat])
+        return get_chat_input_peer(r.chat)
+
     async def resolve_peer(
-        self: "pylogram.Client",
-        peer_id: Union[int, str]
+            self: "pylogram.Client",
+            peer_info: Union[int, str, raw.base.InputPeer, raw.base.InputUser, raw.base.InputChannel],
+            *,
+            cache_only: bool = False
     ) -> Union[raw.base.InputPeer, raw.base.InputUser, raw.base.InputChannel]:
         """Get the InputPeer of a known peer id.
         Useful whenever an InputPeer type is required.
@@ -45,9 +154,13 @@ class ResolvePeer:
         .. include:: /_includes/usable-by/users-bots.rst
 
         Parameters:
-            peer_id (``int`` | ``str``):
+            peer_info (``int`` | ``str``):
                 The peer id you want to extract the InputPeer from.
                 Can be a direct id (int), a username (str) or a phone number (str).
+
+            cache_only (``bool``, *optional*):
+                Whether to resolve the peer only if it's already in the internal database.
+                Defaults to ``False``.
 
         Returns:
             ``InputPeer``: On success, the resolved peer id is returned in form of an InputPeer object.
@@ -56,92 +169,25 @@ class ResolvePeer:
             KeyError: In case the peer doesn't exist in the internal database.
         """
 
-        # TODO: Add support for resolving peer by phone number
+        if isinstance(peer_info, (raw.base.InputPeer, raw.base.InputUser, raw.base.InputChannel)):
+            return peer_info
 
-        if not self.is_connected:
-            # TODO: raise peer not found in storage file
+        if not cache_only and not self.is_connected:
             raise ConnectionError("Client has not been started yet")
 
-        try:
-            return await self.storage.get_peer_by_id(peer_id)
-        except KeyError:
-            if isinstance(peer_id, str):
-                if peer_id in ("self", "me"):
-                    return raw.types.InputPeerSelf()
+        if isinstance(peer_info, int):
+            return await self._resolve_peer_by_id(peer_info, cache_only=cache_only)
+        elif isinstance(peer_info, str):
+            if peer_info in ("self", "me"):
+                return raw.types.InputPeerSelf()
 
-                if bool(invite_link_match := self.INVITE_LINK_RE.match(peer_id)):
-                    # TODO: Support invite links
-                    pass
+            if bool(phone_number := utils.parse_phone_number(peer_info)):
+                return await self._resolve_peer_by_phone_number(phone_number, cache_only=cache_only)
 
-                peer_id = peer_id.strip('@+ ')
+            if bool(invite_link_match := self.INVITE_LINK_RE.match(peer_info)):
+                return await self._resolve_peer_by_invite_hash(invite_link_match.group(1), cache_only=cache_only)
 
-                try:
-                    int(peer_id)
-                except ValueError:
-                    username = utils.parse_username(peer_id)
+            if bool(username := utils.parse_username(peer_info)):
+                return await self._resolve_peer_by_username(username, cache_only=cache_only)
 
-                    try:
-                        return await self.storage.get_peer_by_username(username)
-                    except KeyError:
-                        await self.invoke(
-                            raw.functions.contacts.ResolveUsername(
-                                username=username
-                            )
-                        )
-
-                        try:
-                            return await self.storage.get_peer_by_username(peer_id)
-                        except KeyError as e:
-                            raise PeerIdInvalid from e
-                else:
-                    try:
-                        return await self.storage.get_peer_by_phone_number(peer_id)
-                    except KeyError:
-                        await self.invoke(
-                            raw.functions.contacts.ResolvePhone(
-                                phone=peer_id
-                            )
-                        )
-
-                        try:
-                            return await self.storage.get_peer_by_phone_number(peer_id)
-                        except KeyError as e:
-                            raise PeerIdInvalid from e
-
-            peer_type = utils.get_peer_type(peer_id)
-
-            if peer_type == "user":
-                await self.fetch_peers(
-                    await self.invoke(
-                        raw.functions.users.GetUsers(
-                            id=[
-                                raw.types.InputUser(
-                                    user_id=peer_id,
-                                    access_hash=0
-                                )
-                            ]
-                        )
-                    )
-                )
-            elif peer_type == "chat":
-                await self.invoke(
-                    raw.functions.messages.GetChats(
-                        id=[-peer_id]
-                    )
-                )
-            else:
-                await self.invoke(
-                    raw.functions.channels.GetChannels(
-                        id=[
-                            raw.types.InputChannel(
-                                channel_id=utils.get_channel_id(peer_id),
-                                access_hash=0
-                            )
-                        ]
-                    )
-                )
-
-            try:
-                return await self.storage.get_peer_by_id(peer_id)
-            except KeyError as e:
-                raise PeerIdInvalid from e
+        raise PeerIdInvalid(f"Invalid peer id: {peer_info}")
