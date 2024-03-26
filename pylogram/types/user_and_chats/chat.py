@@ -176,6 +176,9 @@ class Chat(Object):
             profile_color: Optional["raw.types.PeerColor"] = None,
             emoji_status: Optional["raw.base.EmojiStatus"] = None,
             level: Optional[int] = None,
+            raw_chat: "raw.base.Chat" = None,
+            raw_user: "raw.base.User" = None,
+            raw_user_full: "raw.base.UserFull" = None,
     ):
         super().__init__(client)
 
@@ -215,9 +218,21 @@ class Chat(Object):
         self.profile_color = profile_color
         self.emoji_status = emoji_status
         self.level = level
+        self._raw_chat = raw_chat
+        self._raw_user = raw_user
+        self._raw_user_full = raw_user_full
+
+    def get_raw_chat(self) -> Optional["raw.base.Chat"]:
+        return self._raw_chat
+
+    def get_raw_user(self) -> Optional["raw.base.User"]:
+        return self._raw_user
+
+    def get_raw_user_full(self) -> Optional["raw.base.UserFull"]:
+        return self._raw_user_full
 
     @staticmethod
-    def _parse_user_chat(client, user: raw.types.User) -> "Chat":
+    def _parse_user_chat(client, user: raw.types.User, *, user_full: Optional[raw.types.UserFull] = None) -> "Chat":
         peer_id = user.id
 
         return Chat(
@@ -238,6 +253,8 @@ class Chat(Object):
             client=client,
             color=getattr(user, 'color', None),
             profile_color=getattr(user, 'profile_color', None),
+            raw_user=user,
+            raw_user_full=user_full,
         )
 
     @staticmethod
@@ -255,6 +272,7 @@ class Chat(Object):
             dc_id=getattr(getattr(chat, "photo", None), "dc_id", None),
             has_protected_content=getattr(chat, "noforwards", None),
             client=client,
+            raw_chat=chat,
         )
 
     @staticmethod
@@ -292,6 +310,7 @@ class Chat(Object):
             profile_color=getattr(channel, 'profile_color', None),
             emoji_status=getattr(channel, 'emoji_status', None),
             level=getattr(channel, 'level', None),
+            raw_chat=channel,
         )
 
     @staticmethod
@@ -331,7 +350,7 @@ class Chat(Object):
         if isinstance(chat_full, raw.types.users.UserFull):
             full_user = chat_full.full_user
 
-            parsed_chat = Chat._parse_user_chat(client, users[full_user.id])
+            parsed_chat = Chat._parse_user_chat(client, users[full_user.id], user_full=full_user)
             parsed_chat.bio = full_user.about
             parsed_chat.about = full_user.about
 
@@ -354,10 +373,8 @@ class Chat(Object):
                 parsed_chat = Chat._parse_channel_chat(client, chat_raw)
                 parsed_chat.members_count = full_chat.participants_count
                 parsed_chat.description = full_chat.about or None
-                # TODO: Add StickerSet type
                 parsed_chat.can_set_sticker_set = full_chat.can_set_stickers
                 parsed_chat.sticker_set_name = getattr(full_chat.stickerset, "short_name", None)
-
                 linked_chat_raw = chats.get(full_chat.linked_chat_id, None)
 
                 if linked_chat_raw:

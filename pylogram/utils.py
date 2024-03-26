@@ -170,7 +170,8 @@ def parse_deleted_messages(client, update) -> List["types.Message"]:
                     type=enums.ChatType.CHANNEL,
                     client=client
                 ) if channel_id is not None else None,
-                client=client
+                client=client,
+                raw_message=message
             )
         )
 

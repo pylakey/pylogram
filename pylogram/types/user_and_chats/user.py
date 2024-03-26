@@ -184,6 +184,8 @@ class User(Object, Update):
         contact_require_premium: bool = False,
         color: Optional["raw.types.PeerColor"] = None,
         profile_color: Optional["raw.types.PeerColor"] = None,
+        raw_user: "raw.base.User" = None,
+        raw_user_full: "raw.base.UserFull" = None
     ):
         super().__init__(client)
 
@@ -228,6 +230,14 @@ class User(Object, Update):
         self.contact_require_premium = contact_require_premium
         self.color = color
         self.profile_color = profile_color
+        self._raw_user = raw_user
+        self._raw_user_full = raw_user_full
+
+    def get_raw_user(self) -> "raw.base.User":
+        return self._raw_user
+
+    def get_raw_user_full(self) -> Optional["raw.base.UserFull"]:
+        return self._raw_user_full
 
     @property
     def mention(self):
@@ -238,7 +248,7 @@ class User(Object, Update):
         )
 
     @staticmethod
-    def _parse(client, user: "raw.base.User") -> Optional["User"]:
+    def _parse(client, user: Optional[raw.base.User]) -> Optional["User"]:
         if user is None or isinstance(user, raw.types.UserEmpty):
             return None
 
@@ -274,6 +284,8 @@ class User(Object, Update):
             contact_require_premium=user.contact_require_premium,
             color=user.color,
             profile_color=user.profile_color,
+            raw_user=user,
+            # raw_user_full=user_full
         )
 
     @staticmethod

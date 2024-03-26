@@ -87,7 +87,7 @@ class GetChat:
                     )
                 )
             )
-        elif isinstance(peer, (raw.types.InputPeerUser, raw.types.InputPeerSelf)):
+        elif isinstance(peer, raw.types.InputPeerUser):
             r = await self.invoke(
                 raw.functions.users.GetFullUser(
                     id=(
@@ -98,6 +98,12 @@ class GetChat:
                             access_hash=peer.access_hash
                         )
                     )
+                )
+            )
+        elif isinstance(peer, raw.types.InputPeerSelf):
+            r = await self.invoke(
+                raw.functions.users.GetFullUser(
+                    id=raw.types.InputUserSelf()
                 )
             )
         else:

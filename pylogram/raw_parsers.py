@@ -13,7 +13,12 @@ def parse_raw_message(
         chats: dict
 ) -> pylogram.types.Message:
     if isinstance(message, pylogram.raw.types.MessageEmpty):
-        return pylogram.types.Message(id=message.id, empty=True, client=client)
+        return pylogram.types.Message(
+            id=message.id,
+            empty=True,
+            client=client,
+            raw_message=message
+        )
 
     from_peer_id = pylogram.utils.get_raw_peer_id(message.from_id)
     peer_id = pylogram.utils.get_raw_peer_id(message.peer_id)
@@ -115,7 +120,8 @@ def parse_raw_message(
             video_chat_members_invited=video_chat_members_invited,
             web_app_data=web_app_data,
             client=client,
-            reply_to=message.reply_to
+            reply_to=message.reply_to,
+            raw_message=message
             # TODO: supergroup_chat_created
         )
 
@@ -337,7 +343,8 @@ def parse_raw_message(
             reply_markup=reply_markup,
             reactions=reactions,
             client=client,
-            reply_to=message.reply_to
+            reply_to=message.reply_to,
+            raw_message=message
         )
 
         if isinstance(message.reply_to, pylogram.raw.types.MessageReplyHeader):
@@ -435,6 +442,7 @@ def parse_raw_dialogs(
             unread_mentions_count=dialog.unread_mentions_count,
             unread_messages_count=dialog.unread_count,
             is_pinned=dialog.pinned,
+            raw_dialog=dialog
         )
         result.append(parsed_dialog)
 

@@ -261,7 +261,7 @@ class Message(Object, Update):
         views (``int``, *optional*):
             Channel post views.
 
-	forwards (``int``, *optional*):
+        forwards (``int``, *optional*):
             Channel post forwards.
 
         via_bot (:obj:`~pylogram.types.User`):
@@ -389,7 +389,8 @@ class Message(Object, Update):
             "types.ReplyKeyboardRemove",
             "types.ForceReply"
         ] = None,
-        reactions: List["types.Reaction"] = None
+        reactions: List["types.Reaction"] = None,
+        raw_message: "raw.base.Message" = None
     ):
         super().__init__(client)
 
@@ -463,6 +464,10 @@ class Message(Object, Update):
         self.video_chat_members_invited = video_chat_members_invited
         self.web_app_data = web_app_data
         self.reactions = reactions
+        self._raw_message = raw_message
+
+    def get_raw(self) -> "raw.base.Message":
+        return self._raw_message
 
     @staticmethod
     async def _parse(
@@ -474,7 +479,7 @@ class Message(Object, Update):
         replies: int = 1
     ):
         if isinstance(message, raw.types.MessageEmpty):
-            return Message(id=message.id, empty=True, client=client)
+            return Message(id=message.id, empty=True, client=client, raw_message=message)
 
         from_id = utils.get_raw_peer_id(message.from_id)
         peer_id = utils.get_raw_peer_id(message.peer_id)
@@ -588,7 +593,8 @@ class Message(Object, Update):
                 video_chat_members_invited=video_chat_members_invited,
                 web_app_data=web_app_data,
                 client=client,
-                reply_to=message.reply_to
+                reply_to=message.reply_to,
+                raw_message=message
                 # TODO: supergroup_chat_created
             )
 
@@ -828,7 +834,8 @@ class Message(Object, Update):
                 reply_markup=reply_markup,
                 reactions=reactions,
                 client=client,
-                reply_to=message.reply_to
+                reply_to=message.reply_to,
+                raw_message=message
             )
 
             if isinstance(message.reply_to, MessageReplyHeader):
