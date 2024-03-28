@@ -1,0 +1,54 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.version]
+path = "pylogram/__init__.py"
+
+[tool.hatch.build.hooks.custom]
+
+[project]
+name = "pylogram"
+dynamic = ["version"]
+description = "Elegant, modern and asynchronous Telegram MTProto API framework in Python for users and bots"
+authors = [
+    { name = "Pylakey", email = "pylakey@protonmail.com" },
+]
+dependencies = [
+    "tgcrypto~=1.2.5",
+    "python-socks[asyncio]~=2.4.4"
+]
+readme = "README.md"
+requires-python = ">=3.10"
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Natural Language :: English",
+    "License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: Implementation",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Python :: Implementation :: PyPy",
+    "Topic :: Internet",
+    "Topic :: Communications",
+    "Topic :: Communications :: Chat",
+    "Topic :: Software Development :: Libraries",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Software Development :: Libraries :: Application Frameworks"
+]
+license = { file = "LICENSE" }
+keywords = ["telegram", "chat", "messenger", "mtproto", "api", "client", "library", "python"]
+
+[project.urls]
+Source = "https://github.com/pylakey/pylogram"
+Homepage = "https://github.com/pylakey/pylogram"
+
+[project.scripts]
+# Add your scripts here
+compile_api = "compiler.api.compiler:start"
+compile_errors = "compiler.errors.compiler:start"
