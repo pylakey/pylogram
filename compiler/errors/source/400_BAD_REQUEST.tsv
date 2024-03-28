@@ -227,6 +227,7 @@ PHONE_CODE_EMPTY	The phone code is missing
 PHONE_CODE_EXPIRED	The confirmation code has expired
 PHONE_CODE_HASH_EMPTY	The phone code hash is missing
 PHONE_CODE_INVALID	The confirmation code is invalid
+PHONE_NOT_OCCUPIED	The phone number is not occupied by anyone
 PHONE_NUMBER_APP_SIGNUP_FORBIDDEN	You can't sign up using this app
 PHONE_NUMBER_BANNED	The phone number is banned from Telegram and cannot be used
 PHONE_NUMBER_FLOOD	This number has tried to login too many times
@@ -335,6 +336,7 @@ TMP_PASSWORD_INVALID	The temporary password is invalid
 TOKEN_INVALID	The provided token is invalid
 TOPIC_CLOSED	The topic was closed
 TOPIC_DELETED	The topic was deleted
+TOPIC_ID_INVALID	The topic id is invalid
 TOPIC_NOT_MODIFIED	The topic was not modified
 TRANSCRIPTION_FAILED	Telegram is having internal problems. Please try again later to transcribe the audio.
 TTL_DAYS_INVALID	The provided TTL days is invalid
