@@ -27,6 +27,7 @@ from pylogram.errors import PeerIdInvalid
 from pylogram.peers import get_chat_input_peer
 from pylogram.peers import get_resolved_peer_input_peer
 from pylogram.peers import get_user_input_peer
+from pylogram.utils import is_tl_object_of_base_type
 
 log = logging.getLogger(__name__)
 
@@ -57,6 +58,10 @@ class ResolvePeer:
                         ]
                     )
                 )
+
+                if not users:
+                    raise PeerIdInvalid(f"User with id {peer_id} not found")
+
                 await self.update_storage_peers(users)
                 return get_user_input_peer(users[0])
             elif peer_type == "chat":
@@ -169,7 +174,7 @@ class ResolvePeer:
             KeyError: In case the peer doesn't exist in the internal database.
         """
 
-        if isinstance(peer_info, (raw.base.InputPeer, raw.base.InputUser, raw.base.InputChannel)):
+        if is_tl_object_of_base_type(peer_info, (raw.base.InputPeer, raw.base.InputUser, raw.base.InputChannel)):
             return peer_info
 
         if not cache_only and not self.is_connected:

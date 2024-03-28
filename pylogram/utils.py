@@ -27,9 +27,11 @@ import re
 import struct
 import sys
 import time
+import typing
 from datetime import datetime
 from datetime import timezone
 from getpass import getpass
+from typing import Any
 from typing import Dict
 from typing import List
 from typing import Optional
@@ -437,3 +439,37 @@ def calculate_pagination_hash(numbers: List[int]) -> int:
         acc = (acc + number) & 0xffffffffffffffff  # To let it not overflow a 64-bit integer
 
     return acc
+
+
+def is_tl_object_of_base_type(value: pylogram.raw.core.TLObject, base_type: Any | tuple[Any]) -> bool:
+    if isinstance(base_type, tuple):
+        return any(is_tl_object_of_base_type(value, t) for t in base_type)
+
+    if base_type is None or base_type is Any:
+        return True
+
+    try:
+        if isinstance(value, base_type):
+            return True
+    except TypeError:
+        pass
+
+    try:
+        if issubclass(type(value), base_type):
+            return True
+    except TypeError:
+        pass
+
+    if base_type is type(value):
+        return True
+
+    origin = typing.get_origin(base_type)
+
+    if origin is Union:
+        for arg in typing.get_args(base_type):
+            if is_tl_object_of_base_type(value, arg):
+                return True
+
+        return False
+
+    return False
