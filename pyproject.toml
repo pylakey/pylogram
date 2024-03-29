@@ -2,16 +2,15 @@
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
-[tool.hatch.version]
-path = "pylogram/__init__.py"
-
-[tool.hatch.build.hooks.custom]
-
 [project]
 name = "pylogram"
 dynamic = ["version"]
 description = "Elegant, modern and asynchronous Telegram MTProto API framework in Python for users and bots"
 authors = [
+    { name = "Dan", email = "dan@pyrogram.org" },
+    { name = "Pylakey", email = "pylakey@protonmail.com" },
+]
+maintainers = [
     { name = "Pylakey", email = "pylakey@protonmail.com" },
 ]
 dependencies = [
@@ -52,3 +51,31 @@ Homepage = "https://github.com/pylakey/pylogram"
 # Add your scripts here
 compile_api = "compiler.api.compiler:start"
 compile_errors = "compiler.errors.compiler:start"
+
+[tool.hatch.version]
+path = "pylogram/__init__.py"
+
+# Used to call hatch_build.py
+[tool.hatch.build.hooks.custom]
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.build.targets.sdist]
+exclude = [
+    ".github/",
+    "docs/",
+    "news/",
+    "tests/",
+    ".editorconfig",
+    ".gitignore",
+    ".pre-commit-config.yaml",
+    "CONTRIBUTING.md",
+    "NEWS.rst",
+    "requirements.lock",
+    "requirements-dev.lock",
+]
+
+[tool.hatch.build.targets.wheel]
+ignore-vcs = true
+package = "pylogram"

@@ -12,11 +12,17 @@ pylogram/raw/functions/
 pylogram/raw/types/
 pylogram/raw/base/
 pylogram/raw/all.py
+src/pylogram/errors/exceptions/
+src/pylogram/raw/functions/
+src/pylogram/raw/types/
+src/pylogram/raw/base/
+src/pylogram/raw/all.py
 docs/source/telegram
 docs/source/api/methods/
 docs/source/api/bound-methods/
 docs/source/api/types/
 ./sessions/
+./.sessions/
 # PyCharm stuff
 .idea/
 
