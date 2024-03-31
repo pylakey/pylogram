@@ -7,7 +7,7 @@ class GetUserBoosts:
             self: "pylogram.Client",
             chat_id: int | str,
             user_id: int | str = "me"
-    ) -> raw.types.premium.BoostsList:
+    ) -> raw.base.premium.BoostsList:
         chat_peer = await self.resolve_peer(chat_id)
         user_peer = await self.resolve_peer(user_id)
 

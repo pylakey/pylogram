@@ -3,5 +3,5 @@ from pylogram import raw
 
 
 class GetMyBoosts:
-    async def get_my_boosts(self: "pylogram.Client") -> raw.types.premium.MyBoosts:
+    async def get_my_boosts(self: "pylogram.Client") -> raw.base.premium.MyBoosts:
         return await self.invoke(raw.functions.premium.GetMyBoosts())

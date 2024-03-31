@@ -14,7 +14,7 @@ class UpdateConnectedBot:
             users: list[int | str] | None = None,
             can_reply: bool | None = None,
             deleted: bool | None = None,
-    ) -> raw.types.Updates:
+    ) -> raw.base.Updates:
         bot = await self.resolve_peer(bot)
 
         if users is not None:

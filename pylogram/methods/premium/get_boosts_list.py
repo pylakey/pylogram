@@ -9,7 +9,7 @@ class GetBoostsList:
             offset: str = "",
             limit: int = 0,
             gifts: bool | None = None
-    ) -> raw.types.premium.BoostsList:
+    ) -> raw.base.premium.BoostsList:
         chat_peer = await self.resolve_peer(chat_id)
 
         return await self.invoke(

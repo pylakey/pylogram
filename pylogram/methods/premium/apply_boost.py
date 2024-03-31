@@ -7,7 +7,7 @@ class ApplyBoost:
             self: "pylogram.Client",
             chat_id: int | str,
             slots: list[int]
-    ) -> raw.types.premium.MyBoosts:
+    ) -> raw.base.premium.MyBoosts:
         peer = await self.resolve_peer(chat_id)
         return await self.invoke(
             raw.functions.premium.ApplyBoost(

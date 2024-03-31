@@ -6,7 +6,7 @@ class GetBoostsStatus:
     async def get_boosts_status(
             self: "pylogram.Client",
             chat_id: int | str,
-    ) -> raw.types.premium.BoostsStatus:
+    ) -> raw.base.premium.BoostsStatus:
         chat_peer = await self.resolve_peer(chat_id)
 
         return await self.invoke(
