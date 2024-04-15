@@ -17,38 +17,23 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with Pylogram.  If not, see <http://www.gnu.org/licenses/>.
 
-from .advanced import Advanced
-from .auth import Auth
-from .bots import Bots
-from .business import Business
-from .chat_lists import ChatLists
-from .chats import Chats
-from .contacts import Contacts
-from .decorators import Decorators
-from .forums import Forums
-from .invite_links import InviteLinks
-from .messages import Messages
-from .password import Password
-from .premium import Premium
-from .users import Users
-from .utilities import Utilities
+import pylogram
 
 
-class Methods(
-    Advanced,
-    Auth,
-    Bots,
-    Business,
-    ChatLists,
-    Chats,
-    Contacts,
-    Decorators,
-    Forums,
-    InviteLinks,
-    Messages,
-    Password,
-    Premium,
-    Users,
-    Utilities,
-):
-    pass
+class ExportDialogFilter:
+    async def export_dialog_filter(
+            self: "pylogram.Client",
+            dialog_filter: pylogram.raw.base.DialogFilter
+    ) -> pylogram.raw.base.ExportedChatlistInvite:
+        if isinstance(dialog_filter, pylogram.raw.types.DialogFilterChatlist) and dialog_filter.has_my_invites:
+            exported_invites = await self.get_exported_invites(dialog_filter.id)
+
+            if len(exported_invites) > 0:
+                return await self.edit_exported_invite(
+                    exported_invites.invites[0].url,
+                    dialog_filter.id,
+                    dialog_filter.title,
+                    peers=dialog_filter.include_peers
+                )
+
+        return await self.export_dialog_filter_invite(dialog_filter)

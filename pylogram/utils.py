@@ -473,3 +473,14 @@ def is_tl_object_of_base_type(value: pylogram.raw.core.TLObject, base_type: Any 
         return False
 
     return False
+
+
+CHAT_LIST_INVITE_LINK_PREFIX: str = "https://t.me/addlist/"
+
+
+def slug_to_chat_list_invite_link(slug: str) -> str:
+    return f"{self.CHAT_LIST_INVITE_LINK_PREFIX}{slug}"
+
+
+def chat_list_invite_link_to_slug(link: str) -> str:
+    return link.replace(self.CHAT_LIST_INVITE_LINK_PREFIX, '')

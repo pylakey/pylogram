@@ -16,39 +16,28 @@
 #
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with Pylogram.  If not, see <http://www.gnu.org/licenses/>.
+import asyncio
 
-from .advanced import Advanced
-from .auth import Auth
-from .bots import Bots
-from .business import Business
-from .chat_lists import ChatLists
-from .chats import Chats
-from .contacts import Contacts
-from .decorators import Decorators
-from .forums import Forums
-from .invite_links import InviteLinks
-from .messages import Messages
-from .password import Password
-from .premium import Premium
-from .users import Users
-from .utilities import Utilities
+import pylogram
 
 
-class Methods(
-    Advanced,
-    Auth,
-    Bots,
-    Business,
-    ChatLists,
-    Chats,
-    Contacts,
-    Decorators,
-    Forums,
-    InviteLinks,
-    Messages,
-    Password,
-    Premium,
-    Users,
-    Utilities,
-):
-    pass
+class JoinChatListUpdates:
+    async def join_chat_list_updates(self: "pylogram.Client", dialog_filter_id: int) -> pylogram.raw.base.Updates:
+        updates = await self.get_chat_list_updates(dialog_filter_id)
+
+        # TODO: Implement leaving chats whose are not in folder
+
+        # noinspection PyTypeChecker
+        return await self.invoke(
+            pylogram.raw.functions.chatlists.JoinChatlistUpdates(
+                chatlist=pylogram.raw.types.InputChatlistDialogFilter(
+                    filter_id=dialog_filter_id
+                ),
+                peers=(
+                    await asyncio.gather(*[
+                        self.resolve_peer(pylogram.utils.get_peer_id(p))
+                        for p in updates.missing_peers or []
+                    ])
+                )
+            )
+        )
