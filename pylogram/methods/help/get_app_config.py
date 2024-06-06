@@ -11,7 +11,6 @@ class GetAppConfig:
             self: "pylogram.Client",
             hash_: int = 0
     ) -> raw.base.help.AppConfig:
-        # TODO: Add pagination support
         return await self.invoke(raw.functions.help.GetAppConfig(hash=hash_))
 
     async def get_app_config_full(self) -> dict[str, Any]:
