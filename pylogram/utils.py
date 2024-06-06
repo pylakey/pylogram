@@ -482,8 +482,27 @@ CHAT_LIST_INVITE_LINK_PREFIX: str = "https://t.me/addlist/"
 
 
 def slug_to_chat_list_invite_link(slug: str) -> str:
-    return f"{self.CHAT_LIST_INVITE_LINK_PREFIX}{slug}"
+    return f"{CHAT_LIST_INVITE_LINK_PREFIX}{slug}"
 
 
 def chat_list_invite_link_to_slug(link: str) -> str:
-    return link.replace(self.CHAT_LIST_INVITE_LINK_PREFIX, '')
+    return link.replace(CHAT_LIST_INVITE_LINK_PREFIX, '')
+
+
+def telegram_json_to_python_obj(data: raw.base.JSONValue) -> Any:
+    if isinstance(data, raw.types.JsonObject):
+        return {item.key: telegram_json_to_python_obj(item.value) for item in data.value}
+
+    if isinstance(data, list):
+        return [telegram_json_to_python_obj(item) for item in data]
+
+    if isinstance(data, raw.types.JsonArray):
+        return [telegram_json_to_python_obj(item) for item in data.value]
+
+    if isinstance(data, raw.types.JsonNull):
+        return None
+
+    if isinstance(data, (raw.types.JsonBool, raw.types.JsonNumber, raw.types.JsonString)):
+        return data.value
+
+    raise ValueError(f"Unknown JSON object type: {data}")
