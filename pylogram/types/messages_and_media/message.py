@@ -3628,3 +3628,6 @@ class Message(Object, Update):
             chat_id=self.chat.id,
             message_id=self.id
         )
+
+    async def read(self):
+        return await self._client.read_chat_history(self.chat.id, self.id)
