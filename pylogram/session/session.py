@@ -23,6 +23,7 @@ import logging
 import os
 from hashlib import sha1
 from io import BytesIO
+from typing import Type
 
 import pylogram
 from pylogram import raw
@@ -42,6 +43,8 @@ from pylogram.raw.core import MsgContainer
 from pylogram.raw.core import TLObject
 from .internals import MsgFactory
 from .internals import MsgId
+from ..connection.transport import TCP
+from ..connection.transport import TCPFull
 
 log = logging.getLogger(__name__)
 
@@ -74,7 +77,9 @@ class Session:
             auth_key: bytes,
             test_mode: bool,
             is_media: bool = False,
-            is_cdn: bool = False
+            is_cdn: bool = False,
+            *,
+            connection_protocol_class: Type[TCP] = TCPFull
     ):
         self.client = client
         self.dc_id = dc_id
@@ -97,6 +102,7 @@ class Session:
         self.loop = asyncio.get_event_loop()
         self.background_tasks = set()
         self.updates_handling_tasks = set()
+        self.connection_protocol_class = connection_protocol_class
 
     async def start(self):
         while True:
@@ -105,7 +111,8 @@ class Session:
                 self.test_mode,
                 self.client.ipv6,
                 self.client.proxy,
-                self.is_media
+                self.is_media,
+                protocol_class=self.connection_protocol_class
             )
 
             api_id = self.client.api_id

@@ -32,10 +32,18 @@ async def get_session(client: "pylogram.Client", dc_id: int):
         if client.media_sessions.get(dc_id):
             return client.media_sessions[dc_id]
 
+        auth_key = await Auth(
+            client,
+            dc_id,
+            await client.storage.test_mode(),
+            connection_protocol_class=client.connection_protocol_class
+        ).create()
         session = client.media_sessions[dc_id] = Session(
             client, dc_id,
-            await Auth(client, dc_id, await client.storage.test_mode()).create(),
-            await client.storage.test_mode(), is_media=True
+            auth_key,
+            await client.storage.test_mode(),
+            is_media=True,
+            connection_protocol_class=client.connection_protocol_class
         )
 
         await session.start()

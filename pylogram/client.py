@@ -38,6 +38,7 @@ from typing import AsyncGenerator
 from typing import Callable
 from typing import List
 from typing import Optional
+from typing import Type
 from typing import Union
 
 import pylogram
@@ -46,29 +47,31 @@ from pylogram import __version__
 from pylogram import enums
 from pylogram import raw
 from pylogram import utils
+from pylogram.connection.transport import TCP
+from pylogram.connection.transport import TCPFull
 from pylogram.crypto import aes
+from pylogram.dispatcher import Dispatcher
 from pylogram.errors import CDNFileHashMismatch
 from pylogram.errors import ChannelPrivate
 from pylogram.errors import SessionPasswordNeeded
 from pylogram.errors import VolumeLocNotFound
+from pylogram.file_id import FileId
+from pylogram.file_id import FileType
+from pylogram.file_id import ThumbnailSource
 from pylogram.handlers.handler import Handler
 from pylogram.methods import Methods
+from pylogram.mime_types import mime_types
+from pylogram.parser import Parser
 from pylogram.session import Auth
 from pylogram.session import Session
+from pylogram.session.internals import MsgId
 from pylogram.storage import FileStorage
 from pylogram.storage import MemoryStorage
+from pylogram.storage import Storage
 from pylogram.types import Dialog
 from pylogram.types import TermsOfService
 from pylogram.types import User
 from pylogram.utils import ainput
-from .dispatcher import Dispatcher
-from .file_id import FileId
-from .file_id import FileType
-from .file_id import ThumbnailSource
-from .mime_types import mime_types
-from .parser import Parser
-from .session.internals import MsgId
-from .storage import Storage
 
 log = logging.getLogger(__name__)
 
@@ -242,6 +245,7 @@ class Client(Methods):
             message_cache_size: int = 10000,
             first_name: str = None,
             last_name: str = None,
+            connection_protocol_class: Type[TCP] = TCPFull,
     ):
         super().__init__()
 
@@ -275,6 +279,7 @@ class Client(Methods):
         self.hide_password = hide_password
         self.max_concurrent_transmissions = max_concurrent_transmissions
         self.executor = ThreadPoolExecutor(self.workers, thread_name_prefix="Handler")
+        self.connection_protocol_class = connection_protocol_class
 
         if isinstance(session_storage, Storage):
             self.storage = session_storage
@@ -637,7 +642,8 @@ class Client(Methods):
                 await Auth(
                     self,
                     await self.storage.dc_id(),
-                    await self.storage.test_mode()
+                    await self.storage.test_mode(),
+                    connection_protocol_class=self.connection_protocol_class
                 ).create()
             )
             await self.storage.user_id(None)
@@ -851,14 +857,23 @@ class Client(Methods):
             offset_bytes = abs(offset) * chunk_size
 
             dc_id = file_id.dc_id
-
-            session = Session(
-                self, dc_id,
-                await Auth(self, dc_id, await self.storage.test_mode()).create()
+            auth_key = (
+                await Auth(
+                    self,
+                    dc_id,
+                    await self.storage.test_mode(),
+                    connection_protocol_class=self.connection_protocol_class
+                ).create()
                 if dc_id != await self.storage.dc_id()
-                else await self.storage.auth_key(),
+                else await self.storage.auth_key()
+            )
+            session = Session(
+                self,
+                dc_id,
+                auth_key,
                 await self.storage.test_mode(),
-                is_media=True
+                is_media=True,
+                connection_protocol_class=self.connection_protocol_class
             )
 
             try:
@@ -922,11 +937,20 @@ class Client(Methods):
                             ),
                             sleep_threshold=30
                         )
-
                 elif isinstance(r, raw.types.upload.FileCdnRedirect):
+                    auth_key = await Auth(
+                        self,
+                        r.dc_id,
+                        await self.storage.test_mode(),
+                        connection_protocol_class=self.connection_protocol_class
+                    ).create()
                     cdn_session = Session(
-                        self, r.dc_id, await Auth(self, r.dc_id, await self.storage.test_mode()).create(),
-                        await self.storage.test_mode(), is_media=True, is_cdn=True
+                        self, r.dc_id,
+                        auth_key,
+                        await self.storage.test_mode(),
+                        is_media=True,
+                        is_cdn=True,
+                        connection_protocol_class=self.connection_protocol_class
                     )
 
                     try:

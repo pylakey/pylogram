@@ -23,13 +23,20 @@ import time
 from hashlib import sha1
 from io import BytesIO
 from os import urandom
+from typing import Type
 
 import pylogram
 from pylogram import raw
 from pylogram.connection import Connection
-from pylogram.crypto import aes, rsa, prime
+from pylogram.connection.transport import TCP
+from pylogram.connection.transport import TCPFull
+from pylogram.crypto import aes
+from pylogram.crypto import prime
+from pylogram.crypto import rsa
 from pylogram.errors import SecurityCheckMismatch
-from pylogram.raw.core import TLObject, Long, Int
+from pylogram.raw.core import Int
+from pylogram.raw.core import Long
+from pylogram.raw.core import TLObject
 from .internals import MsgId
 
 log = logging.getLogger(__name__)
@@ -38,12 +45,20 @@ log = logging.getLogger(__name__)
 class Auth:
     MAX_RETRIES = 5
 
-    def __init__(self, client: "pylogram.Client", dc_id: int, test_mode: bool):
+    def __init__(
+            self,
+            client: "pylogram.Client",
+            dc_id: int,
+            test_mode: bool,
+            *,
+            connection_protocol_class: Type[TCP] = TCPFull
+    ):
         self.dc_id = dc_id
         self.test_mode = test_mode
         self.ipv6 = client.ipv6
         self.proxy = client.proxy
 
+        self.connection_protocol_class = connection_protocol_class
         self.connection = None
 
     @staticmethod
@@ -77,7 +92,13 @@ class Auth:
         # The server may close the connection at any time, causing the auth key creation to fail.
         # If that happens, just try again up to MAX_RETRIES times.
         while True:
-            self.connection = Connection(self.dc_id, self.test_mode, self.ipv6, self.proxy)
+            self.connection = Connection(
+                self.dc_id,
+                self.test_mode,
+                self.ipv6,
+                self.proxy,
+                protocol_class=self.connection_protocol_class
+            )
 
             try:
                 log.info("Start creating a new auth key on DC%s", self.dc_id)

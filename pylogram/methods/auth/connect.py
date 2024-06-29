@@ -47,6 +47,7 @@ class Connect:
             await self.storage.test_mode(),
             is_media=False,
             is_cdn=False,
+            connection_protocol_class=self.connection_protocol_class,
         )
 
         await self.session.start()

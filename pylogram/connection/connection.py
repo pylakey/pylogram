@@ -20,6 +20,7 @@
 import asyncio
 import logging
 from typing import Optional
+from typing import Type
 
 from .transport import TCP
 from .transport import TCPFull
@@ -31,41 +32,52 @@ log = logging.getLogger(__name__)
 class Connection:
     MAX_CONNECTION_ATTEMPTS = 3
 
-    def __init__(self, dc_id: int, test_mode: bool, ipv6: bool, proxy: dict, media: bool = False):
+    def __init__(
+            self,
+            dc_id: int,
+            test_mode: bool,
+            ipv6: bool,
+            proxy: dict,
+            media: bool = False,
+            protocol_class: Type[TCP] = TCPFull
+    ):
         self.dc_id = dc_id
         self.test_mode = test_mode
         self.ipv6 = ipv6
         self.proxy = proxy
         self.media = media
-
         self.address = DataCenter(dc_id, test_mode, ipv6, media)
+        self.protocol_class = protocol_class
         self.protocol: TCP = None
 
     async def connect(self):
         for i in range(Connection.MAX_CONNECTION_ATTEMPTS):
-            self.protocol = TCPFull(self.ipv6, self.proxy)
+            self.protocol = self.protocol_class(self.ipv6, self.proxy)
 
             try:
-                log.info("Connecting...")
+                log.info(f"[%s] Connecting using protocol...", self.protocol_class.__name__)
                 await self.protocol.connect(self.address)
             except OSError as e:
-                log.warning("Unable to connect due to network issues: %s", e)
+                log.warning("[%s] Unable to connect due to network issues: %s", self.protocol_class.__name__, e)
                 await self.protocol.close()
                 await asyncio.sleep(1)
             else:
-                log.info("Connected! %s DC%s%s - IPv%s",
-                         "Test" if self.test_mode else "Production",
-                         self.dc_id,
-                         " (media)" if self.media else "",
-                         "6" if self.ipv6 else "4")
+                log.info(
+                    "[%s] Connected! %s DC%s%s - IPv%s",
+                    self.protocol_class.__name__,
+                    "Test" if self.test_mode else "Production",
+                    self.dc_id,
+                    " (media)" if self.media else "",
+                    "6" if self.ipv6 else "4"
+                )
                 break
         else:
-            log.warning("Connection failed! Trying again...")
+            log.warning("[%s] Connection failed! Trying again...", self.protocol_class.__name__)
             raise ConnectionError
 
     async def close(self):
         await self.protocol.close()
-        log.info("Disconnected")
+        log.info("[%s] Disconnected", self.protocol_class.__name__)
 
     async def send(self, data: bytes):
         await self.protocol.send(data)

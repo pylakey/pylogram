@@ -63,13 +63,18 @@ class SignInBot:
                 await self.storage.dc_id(e.value)
                 await self.storage.auth_key(
                     await Auth(
-                        self, await self.storage.dc_id(),
-                        await self.storage.test_mode()
+                        self,
+                        await self.storage.dc_id(),
+                        await self.storage.test_mode(),
+                        connection_protocol_class=self.connection_protocol_class
                     ).create()
                 )
                 self.session = Session(
-                    self, await self.storage.dc_id(),
-                    await self.storage.auth_key(), await self.storage.test_mode()
+                    self,
+                    await self.storage.dc_id(),
+                    await self.storage.auth_key(),
+                    await self.storage.test_mode(),
+                    connection_protocol_class=self.connection_protocol_class
                 )
 
                 await self.session.start()
