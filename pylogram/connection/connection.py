@@ -21,8 +21,7 @@ import asyncio
 import logging
 from typing import Optional
 
-from .transport import TCP
-from .transport import TCPFull
+from .transport import TCP, TCPAbridged
 from ..session.internals import DataCenter
 
 log = logging.getLogger(__name__)
@@ -43,7 +42,7 @@ class Connection:
 
     async def connect(self):
         for i in range(Connection.MAX_CONNECTION_ATTEMPTS):
-            self.protocol = TCPFull(self.ipv6, self.proxy)
+            self.protocol = TCPAbridged(self.ipv6, self.proxy)
 
             try:
                 log.info("Connecting...")
