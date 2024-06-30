@@ -423,7 +423,7 @@ def parse_username(username_string: str) -> str:
 
 
 def parse_phone_number(phone_number: int | str) -> str | None:
-    phone_number = re.sub(r"\D", "", str(phone_number))
+    phone_number = re.sub(r"[()+\-\s]", "", str(phone_number))
 
     # Validate phone number format according to ISO 3166-1 alpha-2
     if not re.match(r"^\d{5,15}$", phone_number):
