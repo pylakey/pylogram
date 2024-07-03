@@ -23,9 +23,15 @@ import pylogram
 class LeaveDialogFilter:
     async def leave_dialog_filter(
             self: "pylogram.Client",
-            dialog_filter: pylogram.raw.base.DialogFilter,
+            dialog_filter: int | pylogram.raw.base.DialogFilter,
             leave_chats: bool = True
     ):
+        if isinstance(dialog_filter, int):
+            dialog_filter = await self.get_dialog_filter_by_id(dialog_filter)
+
+            if not bool(dialog_filter):
+                raise ValueError("Dialog filter with this ID not found.")
+
         await self.invoke(
             pylogram.raw.functions.chatlists.LeaveChatlist(
                 chatlist=pylogram.raw.types.InputChatlistDialogFilter(

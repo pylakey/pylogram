@@ -20,22 +20,22 @@ import asyncio
 
 import pylogram
 from pylogram import utils
-from pylogram.raw.base.chatlists import ChatlistInvite
+from pylogram.raw.types.chatlists import ChatlistInvite
 from pylogram.raw.types.chatlists import ChatlistInviteAlready
 
 
 class JoinChatListInvite:
-    async def join_chats_list_invite(
+    async def join_chat_list_invite(
             self: "pylogram.Client",
             invite_link: str,
             auto_join_updates: bool = True
     ):
-        chats_list_invite = await self.check_chat_list_invite(invite_link)
+        chat_list_invite = await self.check_chat_list_invite(invite_link)
 
-        if isinstance(chats_list_invite, ChatlistInvite):
+        if isinstance(chat_list_invite, ChatlistInvite):
             peers = await asyncio.gather(*[
                 self.resolve_peer(utils.get_peer_id(p))
-                for p in chats_list_invite.peers
+                for p in chat_list_invite.peers
             ])
             # noinspection PyTypeChecker
             await self.invoke(
@@ -44,5 +44,5 @@ class JoinChatListInvite:
                     peers=peers
                 )
             )
-        elif auto_join_updates and isinstance(chats_list_invite, ChatlistInviteAlready):
-            await self.join_chat_list_updates(chats_list_invite.filter_id)
+        elif auto_join_updates and isinstance(chat_list_invite, ChatlistInviteAlready):
+            await self.join_chat_list_updates(chat_list_invite.filter_id)
