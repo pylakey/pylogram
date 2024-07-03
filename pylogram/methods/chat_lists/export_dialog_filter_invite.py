@@ -16,7 +16,7 @@ class ExportDialogFilterInvite:
                 chatlist=pylogram.raw.types.InputChatlistDialogFilter(
                     filter_id=dialog_filter.id
                 ),
-                peers=dialog_filter.include_peers
+                peers=dialog_filter.pinned_peers + dialog_filter.include_peers
             )
         )
 

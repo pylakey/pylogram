@@ -21,7 +21,7 @@ import pylogram
 
 
 class GetDialogFilters:
-    async def get_dialog_filters(self: "pylogram.Client") -> pylogram.raw.types.messages.DialogFilters:
+    async def get_dialog_filters(self: "pylogram.Client") -> pylogram.raw.base.messages.DialogFilters:
         # TODO: implement caching?
         return await self.invoke(
             pylogram.raw.functions.messages.GetDialogFilters()

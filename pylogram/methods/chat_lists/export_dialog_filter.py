@@ -23,8 +23,11 @@ import pylogram
 class ExportDialogFilter:
     async def export_dialog_filter(
             self: "pylogram.Client",
-            dialog_filter: pylogram.raw.base.DialogFilter
+            dialog_filter: int | pylogram.raw.base.DialogFilter
     ) -> pylogram.raw.base.ExportedChatlistInvite:
+        if isinstance(dialog_filter, int):
+            dialog_filter = await self.get_dialog_filter_by_id(dialog_filter)
+
         if isinstance(dialog_filter, pylogram.raw.types.DialogFilterChatlist) and dialog_filter.has_my_invites:
             exported_invites = await self.get_exported_invites(dialog_filter.id)
 
@@ -33,7 +36,7 @@ class ExportDialogFilter:
                     exported_invites.invites[0].url,
                     dialog_filter.id,
                     dialog_filter.title,
-                    peers=dialog_filter.include_peers
+                    peers=dialog_filter.pinned_peers + dialog_filter.include_peers
                 )
 
         return await self.export_dialog_filter_invite(dialog_filter)
