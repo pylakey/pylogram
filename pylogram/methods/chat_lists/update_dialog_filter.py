@@ -40,11 +40,13 @@ class UpdateDialogFilter:
         current_filter = None
 
         if dialog_filter_id is not None:
-            current_filter = next((
-                f
-                for f in all_filters.filters
-                if not isinstance(f, pylogram.raw.types.DialogFilterDefault) and f.id == dialog_filter_id), None
-            )
+            for f in all_filters.filters:
+                if not isinstance(f, (pylogram.raw.types.DialogFilter, pylogram.raw.types.DialogFilterChatlist)):
+                    continue
+
+                if f.id == dialog_filter_id:
+                    current_filter = f
+                    break
         else:
             all_filters_ids = set([getattr(f, 'id', 0) for f in all_filters.filters])
 
