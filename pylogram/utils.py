@@ -506,3 +506,54 @@ def telegram_json_to_python_obj(data: raw.base.JSONValue) -> Any:
         return data.value
 
     raise ValueError(f"Unknown JSON object type: {data}")
+
+
+def get_input_peer_from_peer(
+        peer: pylogram.raw.base.Peer,
+        *,
+        chats: dict[int, pylogram.raw.base.Chat] = None,
+        users: dict[int, pylogram.raw.base.User] = None,
+        allowed_only: bool = False
+) -> pylogram.raw.base.InputPeer | None:
+    if not bool(chats):
+        chats = {}
+    if not bool(users):
+        users = {}
+
+    if isinstance(peer, pylogram.raw.types.PeerUser):
+        user = users.get(peer.user_id)
+
+        if not bool(user):
+            return None
+
+        if allowed_only and isinstance(user, pylogram.raw.types.UserEmpty):
+            return None
+
+        return pylogram.raw.types.InputPeerUser(
+            user_id=peer.user_id,
+            access_hash=users.get(peer.user_id).access_hash,
+        )
+    elif isinstance(peer, pylogram.raw.types.PeerChat):
+        chat = chats.get(peer.chat_id)
+
+        if allowed_only and (not chat or isinstance(chat, (prt.ChatForbidden, prt.ChatEmpty))):
+            return None
+
+        return pylogram.raw.types.InputPeerChat(
+            chat_id=peer.chat_id,
+        )
+    elif isinstance(peer, pylogram.raw.types.PeerChannel):
+        channel = chats.get(peer.channel_id)
+
+        if not bool(channel):
+            return None
+
+        if allowed_only and isinstance(channel, pylogram.raw.types.ChannelForbidden):
+            return None
+
+        return pylogram.raw.types.InputPeerChannel(
+            channel_id=peer.channel_id,
+            access_hash=channel.access_hash,
+        )
+
+    return None
