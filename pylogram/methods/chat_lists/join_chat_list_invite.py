@@ -16,12 +16,8 @@
 #
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with Pylogram.  If not, see <http://www.gnu.org/licenses/>.
-import asyncio
 
 import pylogram
-from pylogram import utils
-from pylogram.raw.types.chatlists import ChatlistInvite
-from pylogram.raw.types.chatlists import ChatlistInviteAlready
 
 
 class JoinChatListInvite:
@@ -29,20 +25,31 @@ class JoinChatListInvite:
             self: "pylogram.Client",
             invite_link: str,
             auto_join_updates: bool = True
-    ):
-        chat_list_invite = await self.check_chat_list_invite(invite_link)
+    ) -> pylogram.raw.base.Updates | None:
+        slug = pylogram.utils.chat_list_invite_link_to_slug(invite_link)
+        cli = await self.invoke(pylogram.raw.functions.chatlists.CheckChatlistInvite(slug=slug))
+        chats_by_id: dict[int, pylogram.raw.base.Chat] = {c.id: c for c in cli.chats}
+        users_by_id: dict[int, pylogram.raw.base.User] = {u.id: u for u in cli.users}
 
-        if isinstance(chat_list_invite, ChatlistInvite):
-            peers = await asyncio.gather(*[
-                self.resolve_peer(utils.get_peer_id(p))
-                for p in chat_list_invite.peers
-            ])
-            # noinspection PyTypeChecker
-            await self.invoke(
+        if isinstance(cli, pylogram.raw.types.chatlists.ChatlistInvite):
+            peers = cli.peers
+        elif isinstance(cli, pylogram.raw.types.chatlists.ChatlistInviteAlready) and auto_join_updates:
+            peers = cli.missing_peers
+        else:
+            peers = []
+
+        peers_to_join = []
+
+        for p in peers:
+            if p := pylogram.utils.get_input_peer_from_peer(p, chats=chats_by_id, users=users_by_id, allowed_only=True):
+                peers_to_join.append(p)
+
+        if len(peers_to_join) > 0:
+            return await self.invoke(
                 pylogram.raw.functions.chatlists.JoinChatlistInvite(
-                    slug=utils.chat_list_invite_link_to_slug(invite_link),
-                    peers=peers
+                    slug=slug,
+                    peers=peers_to_join
                 )
             )
-        elif auto_join_updates and isinstance(chat_list_invite, ChatlistInviteAlready):
-            await self.join_chat_list_updates(chat_list_invite.filter_id)
+
+        return None
