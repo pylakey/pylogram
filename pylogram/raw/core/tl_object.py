@@ -16,7 +16,7 @@
 #
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with Pylogram.  If not, see <http://www.gnu.org/licenses/>.
-
+import base64
 from io import BytesIO
 from json import dumps
 from typing import cast, List, Any, Union, Dict
@@ -39,7 +39,7 @@ class TLObject:
     @staticmethod
     def default(obj: "TLObject") -> Union[str, Dict[str, str]]:
         if isinstance(obj, bytes):
-            return repr(obj)
+            return base64.b64encode(obj).decode('ascii')
 
         return {
             "_": obj.QUALNAME,
