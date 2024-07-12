@@ -31,8 +31,7 @@ log = logging.getLogger(__name__)
 class TCPFull(TCP):
     def __init__(self, ipv6: bool, proxy: dict):
         super().__init__(ipv6, proxy)
-
-        self.seq_no = None
+        self.seq_no = 0
 
     async def connect(self, address: tuple):
         await super().connect(address)
