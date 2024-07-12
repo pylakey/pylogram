@@ -19,7 +19,8 @@
 
 import logging
 from binascii import crc32
-from struct import pack, unpack
+from struct import pack
+from struct import unpack
 from typing import Optional
 
 from .tcp import TCP
@@ -38,8 +39,12 @@ class TCPFull(TCP):
         self.seq_no = 0
 
     async def send(self, data: bytes, *args):
-        data = pack("<II", len(data) + 12, self.seq_no) + data
-        data += pack("<I", crc32(data))
+        length = len(data) + 12
+        data = pack('<ii', length, self.seq_no) + data
+        crc = pack('<I', crc32(data))
+        data = data + crc
+        # data = pack("<II", len(data) + 12, self.seq_no) + data
+        # data += pack("<I", crc32(data))
         self.seq_no += 1
 
         await super().send(data)
