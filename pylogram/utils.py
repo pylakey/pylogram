@@ -536,7 +536,10 @@ def get_input_peer_from_peer(
     elif isinstance(peer, pylogram.raw.types.PeerChat):
         chat = chats.get(peer.chat_id)
 
-        if allowed_only and (not chat or isinstance(chat, (prt.ChatForbidden, prt.ChatEmpty))):
+        if allowed_only and (not chat or isinstance(
+                chat,
+                (pylogram.raw.types.ChatForbidden, pylogram.raw.types.ChatEmpty)
+        )):
             return None
 
         return pylogram.raw.types.InputPeerChat(
