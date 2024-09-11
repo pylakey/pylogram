@@ -16,29 +16,25 @@
 #
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with Pylogram.  If not, see <http://www.gnu.org/licenses/>.
-
+import asyncio
 import inspect
-from typing import Callable
 
-import pylogram
 from pylogram.filters import Filter
-from pylogram.types import Update
+from pylogram.typevars import Client
+from pylogram.typevars import HandlerCallable
+from pylogram.typevars import Update
 
 
 class Handler:
-    def __init__(self, callback: Callable, filters: Filter = None):
+    def __init__(self, callback: HandlerCallable | None, filters: Filter = None):
         self.callback = callback
         self.filters = filters
 
-    async def check(self, client: "pylogram.Client", update: Update):
+    async def check(self, client: Client, update: Update):
         if callable(self.filters):
             if inspect.iscoroutinefunction(self.filters.__call__):
                 return await self.filters(client, update)
             else:
-                return await client.loop.run_in_executor(
-                    client.executor,
-                    self.filters,
-                    client, update
-                )
+                return await asyncio.to_thread(self.filters, client, update)
 
         return True

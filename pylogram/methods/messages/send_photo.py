@@ -26,6 +26,7 @@ import pylogram
 import pylogram.errors.lib_errors
 from pylogram import raw, enums
 from pylogram import types
+from pylogram import typevars
 from pylogram import utils
 from pylogram.errors import FilePartMissing
 from pylogram.file_id import FileType
@@ -51,7 +52,7 @@ class SendPhoto:
             "types.ReplyKeyboardRemove",
             "types.ForceReply"
         ] = None,
-        progress: Callable = None,
+        progress: typevars.ProgressCallable = None,
         progress_args: tuple = ()
     ) -> Optional["types.Message"]:
         """Send photos.

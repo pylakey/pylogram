@@ -20,6 +20,7 @@
 from typing import Callable
 
 from .handler import Handler
+from .handler import HandlerCallable
 
 
 class DisconnectHandler(Handler):
@@ -40,5 +41,5 @@ class DisconnectHandler(Handler):
             is established.
     """
 
-    def __init__(self, callback: Callable):
+    def __init__(self, callback: HandlerCallable):
         super().__init__(callback)

@@ -17,9 +17,8 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with Pylogram.  If not, see <http://www.gnu.org/licenses/>.
 
-from typing import Callable
-
 from .handler import Handler
+from ..typevars import RawHandlerCallable
 
 
 class RawUpdateHandler(Handler):
@@ -64,5 +63,6 @@ class RawUpdateHandler(Handler):
         - :obj:`~pylogram.raw.types.ChannelForbidden`
     """
 
-    def __init__(self, callback: Callable):
-        super().__init__(callback)
+    def __init__(self, callback: RawHandlerCallable):
+        super().__init__(None)
+        self.callback = callback

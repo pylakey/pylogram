@@ -22,6 +22,7 @@ from datetime import datetime
 from typing import Union, BinaryIO, Optional, Callable
 
 import pylogram
+from pylogram import typevars
 from pylogram.errors.lib_errors import StopTransmission
 from pylogram import raw
 from pylogram import types
@@ -48,7 +49,7 @@ class SendVideoNote:
             "types.ReplyKeyboardRemove",
             "types.ForceReply"
         ] = None,
-        progress: Callable = None,
+        progress: typevars.ProgressCallable = None,
         progress_args: tuple = ()
     ) -> Optional["types.Message"]:
         """Send video messages.

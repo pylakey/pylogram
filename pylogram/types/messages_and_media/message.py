@@ -20,16 +20,24 @@
 import logging
 from datetime import datetime
 from functools import partial
-from typing import List, Match, Union, BinaryIO, Optional, Callable
+from typing import BinaryIO
+from typing import List
+from typing import Match
+from typing import Optional
+from typing import Union
 
 import pylogram
-from pylogram import raw, enums
+from pylogram import enums
+from pylogram import raw
 from pylogram import types
 from pylogram import utils
-from pylogram.errors import MessageIdsEmpty, PeerIdInvalid
-from pylogram.parser import utils as parser_utils, Parser
+from pylogram.errors import MessageIdsEmpty
+from pylogram.errors import PeerIdInvalid
+from pylogram.parser import Parser
+from pylogram.parser import utils as parser_utils
 from ..object import Object
 from ..update import Update
+from ... import typevars
 from ...raw.types import MessageReplyHeader
 from ...raw.types import MessageReplyStoryHeader
 
@@ -1007,7 +1015,7 @@ class Message(Object, Update):
             "types.ForceReply"
         ] = None,
         reply_to: Union[int, raw.types.InputReplyToMessage, raw.types.InputReplyToStory] = None,
-        progress: Callable = None,
+        progress: typevars.ProgressCallable = None,
         progress_args: tuple = ()
     ) -> "Message":
         """Bound method *reply_animation* :obj:`~pylogram.types.Message`.
@@ -1150,7 +1158,7 @@ class Message(Object, Update):
             "types.ReplyKeyboardRemove",
             "types.ForceReply"
         ] = None,
-        progress: Callable = None,
+        progress: typevars.ProgressCallable = None,
         progress_args: tuple = ()
     ) -> "Message":
         """Bound method *reply_audio* of :obj:`~pylogram.types.Message`.
@@ -1497,7 +1505,7 @@ class Message(Object, Update):
             "types.ReplyKeyboardRemove",
             "types.ForceReply"
         ] = None,
-        progress: Callable = None,
+        progress: typevars.ProgressCallable = None,
         progress_args: tuple = ()
     ) -> "Message":
         """Bound method *reply_document* of :obj:`~pylogram.types.Message`.
@@ -1906,7 +1914,7 @@ class Message(Object, Update):
             "types.ReplyKeyboardRemove",
             "types.ForceReply"
         ] = None,
-        progress: Callable = None,
+        progress: typevars.ProgressCallable = None,
         progress_args: tuple = ()
     ) -> "Message":
         """Bound method *reply_photo* of :obj:`~pylogram.types.Message`.
@@ -2174,7 +2182,7 @@ class Message(Object, Update):
             "types.ReplyKeyboardRemove",
             "types.ForceReply"
         ] = None,
-        progress: Callable = None,
+        progress: typevars.ProgressCallable = None,
         progress_args: tuple = ()
     ) -> "Message":
         """Bound method *reply_sticker* of :obj:`~pylogram.types.Message`.
@@ -2382,7 +2390,7 @@ class Message(Object, Update):
             "types.ReplyKeyboardRemove",
             "types.ForceReply"
         ] = None,
-        progress: Callable = None,
+        progress: typevars.ProgressCallable = None,
         progress_args: tuple = ()
     ) -> "Message":
         """Bound method *reply_video* of :obj:`~pylogram.types.Message`.
@@ -2531,7 +2539,7 @@ class Message(Object, Update):
             "types.ReplyKeyboardRemove",
             "types.ForceReply"
         ] = None,
-        progress: Callable = None,
+        progress: typevars.ProgressCallable = None,
         progress_args: tuple = ()
     ) -> "Message":
         """Bound method *reply_video_note* of :obj:`~pylogram.types.Message`.
@@ -2650,7 +2658,7 @@ class Message(Object, Update):
             "types.ReplyKeyboardRemove",
             "types.ForceReply"
         ] = None,
-        progress: Callable = None,
+        progress: typevars.ProgressCallable = None,
         progress_args: tuple = ()
     ) -> "Message":
         """Bound method *reply_voice* of :obj:`~pylogram.types.Message`.
@@ -3454,7 +3462,7 @@ class Message(Object, Update):
         file_name: str = "",
         in_memory: bool = False,
         block: bool = True,
-        progress: Callable = None,
+        progress: typevars.ProgressCallable = None,
         progress_args: tuple = ()
     ) -> str:
         """Bound method *download* of :obj:`~pylogram.types.Message`.

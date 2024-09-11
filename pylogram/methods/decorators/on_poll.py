@@ -17,18 +17,18 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with Pylogram.  If not, see <http://www.gnu.org/licenses/>.
 
-from typing import Callable
-
 import pylogram
 from pylogram.filters import Filter
+from pylogram.typevars import HandlerCallable
+from pylogram.typevars import HandlerDecorator
 
 
 class OnPoll:
     def on_poll(
-        self=None,
-        filters=None,
-        group: int = 0
-    ) -> Callable:
+            self=None,
+            filters=None,
+            group: int = 0
+    ) -> HandlerDecorator:
         """Decorator for handling poll updates.
 
         This does the same thing as :meth:`~pylogram.Client.add_handler` using the
@@ -43,7 +43,7 @@ class OnPoll:
                 The group identifier, defaults to 0.
         """
 
-        def decorator(func: Callable) -> Callable:
+        def decorator(func: HandlerCallable) -> HandlerCallable:
             if isinstance(self, pylogram.Client):
                 self.add_handler(pylogram.handlers.PollHandler(func, filters), group)
             elif isinstance(self, Filter) or self is None:

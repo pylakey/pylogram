@@ -17,16 +17,16 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with Pylogram.  If not, see <http://www.gnu.org/licenses/>.
 
-from typing import Callable
-
 import pylogram
+from pylogram.typevars import RawHandlerCallable
+from pylogram.typevars import RawHandlerDecorator
 
 
 class OnRawUpdate:
     def on_raw_update(
-        self=None,
-        group: int = 0
-    ) -> Callable:
+            self=None,
+            group: int = 0
+    ) -> RawHandlerDecorator:
         """Decorator for handling raw updates.
 
         This does the same thing as :meth:`~pylogram.Client.add_handler` using the
@@ -37,7 +37,7 @@ class OnRawUpdate:
                 The group identifier, defaults to 0.
         """
 
-        def decorator(func: Callable) -> Callable:
+        def decorator(func: RawHandlerCallable) -> RawHandlerCallable:
             if isinstance(self, pylogram.Client):
                 self.add_handler(pylogram.handlers.RawUpdateHandler(func), group)
             else:

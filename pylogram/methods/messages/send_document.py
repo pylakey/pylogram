@@ -24,6 +24,7 @@ from typing import Union, BinaryIO, List, Optional, Callable
 
 import pylogram
 from pylogram import enums
+from pylogram import typevars
 from pylogram.errors.lib_errors import StopTransmission
 from pylogram import raw
 from pylogram import types
@@ -53,7 +54,7 @@ class SendDocument:
             "types.ReplyKeyboardRemove",
             "types.ForceReply"
         ] = None,
-        progress: Callable = None,
+        progress: typevars.ProgressCallable = None,
         progress_args: tuple = ()
     ) -> Optional["types.Message"]:
         """Send generic files.

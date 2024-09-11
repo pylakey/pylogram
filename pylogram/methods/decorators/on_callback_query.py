@@ -21,6 +21,8 @@ from typing import Callable
 
 import pylogram
 from pylogram.filters import Filter
+from pylogram.typevars import HandlerCallable
+from pylogram.typevars import HandlerDecorator
 
 
 class OnCallbackQuery:
@@ -28,7 +30,7 @@ class OnCallbackQuery:
         self=None,
         filters=None,
         group: int = 0
-    ) -> Callable:
+    ) -> HandlerDecorator:
         """Decorator for handling callback queries.
 
         This does the same thing as :meth:`~pylogram.Client.add_handler` using the
@@ -43,7 +45,7 @@ class OnCallbackQuery:
                 The group identifier, defaults to 0.
         """
 
-        def decorator(func: Callable) -> Callable:
+        def decorator(func: HandlerCallable) -> HandlerCallable:
             if isinstance(self, pylogram.Client):
                 self.add_handler(pylogram.handlers.CallbackQueryHandler(func, filters), group)
             elif isinstance(self, Filter) or self is None:

@@ -19,18 +19,22 @@
 
 import asyncio
 import functools
-import inspect
 import io
 import logging
 import math
 import os
 from hashlib import md5
 from pathlib import PurePath
-from typing import Union, BinaryIO, Callable
+from typing import Any
+from typing import BinaryIO
+from typing import Callable
+from typing import Coroutine
+from typing import Union
 
 import pylogram
-from pylogram.errors.lib_errors import StopTransmission
 from pylogram import raw
+from pylogram import typevars
+from pylogram.errors.lib_errors import StopTransmission
 from pylogram.session import Session
 
 log = logging.getLogger(__name__)
@@ -38,12 +42,12 @@ log = logging.getLogger(__name__)
 
 class SaveFile:
     async def save_file(
-        self: "pylogram.Client",
-        path: Union[str, BinaryIO],
-        file_id: int = None,
-        file_part: int = 0,
-        progress: Callable = None,
-        progress_args: tuple = ()
+            self: "pylogram.Client",
+            path: Union[str, BinaryIO],
+            file_id: int = None,
+            file_part: int = 0,
+            progress: typevars.ProgressCallable = None,
+            progress_args: tuple = ()
     ):
         """Upload a file onto Telegram servers, without actually sending the message to anyone.
         Useful whenever an InputFile type is required.
@@ -137,7 +141,7 @@ class SaveFile:
                 is_media=True,
                 connection_protocol_class=self.connection_protocol_class
             )
-            workers = [self.loop.create_task(worker(session)) for _ in range(workers_count)]
+            workers = [asyncio.create_task(worker(session)) for _ in range(workers_count)]
             queue = asyncio.Queue(1)
 
             try:
@@ -184,11 +188,7 @@ class SaveFile:
                             file_size,
                             *progress_args
                         )
-
-                        if inspect.iscoroutinefunction(progress):
-                            await func()
-                        else:
-                            await self.loop.run_in_executor(self.executor, func)
+                        await func()
             except StopTransmission:
                 raise
             except Exception as e:

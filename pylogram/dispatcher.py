@@ -18,7 +18,6 @@
 #  along with Pylogram.  If not, see <http://www.gnu.org/licenses/>.
 
 import asyncio
-import inspect
 import logging
 from collections import OrderedDict
 from functools import partial
@@ -42,6 +41,7 @@ from pylogram.handlers import MessageHandler
 from pylogram.handlers import PollHandler
 from pylogram.handlers import RawUpdateHandler
 from pylogram.handlers import UserStatusHandler
+from pylogram.handlers.handler import Handler
 from pylogram.middleware import Middleware
 from pylogram.raw.types import UpdateBotCallbackQuery
 from pylogram.raw.types import UpdateBotChatInviteRequester
@@ -81,11 +81,10 @@ class Dispatcher:
 
     def __init__(self, client: "pylogram.Client"):
         self.client = client
-        self.loop = asyncio.get_event_loop()
         self.handler_worker_tasks = []
         self.locks_list = []
         self.updates_queue = asyncio.Queue()
-        self.groups = OrderedDict()
+        self.groups: dict[int, set[Handler]] = OrderedDict()
 
         async def message_parser(update, users, chats):
             return (
@@ -172,10 +171,8 @@ class Dispatcher:
 
         if not self.client.no_updates:
             for i in range(self.client.workers):
-                self.locks_list.append(asyncio.Lock())
-                self.handler_worker_tasks.append(
-                    self.loop.create_task(self.handler_worker(self.locks_list[-1]))
-                )
+                self.locks_list.append(lock := asyncio.Lock())
+                self.handler_worker_tasks.append(asyncio.create_task(self.handler_worker(lock)))
 
             log.info("Started %s HandlerTasks", self.client.workers)
 
@@ -193,63 +190,19 @@ class Dispatcher:
             log.info("Stopped %s HandlerTasks", self.client.workers)
 
     def add_handler(self, handler, group: int):
-        async def fn():
-            for lock in self.locks_list:
-                await lock.acquire()
-
-            try:
-                if group not in self.groups:
-                    self.groups[group] = []
-                    self.groups = OrderedDict(sorted(self.groups.items()))
-
-                self.groups[group].append(handler)
-            finally:
-                for lock in self.locks_list:
-                    lock.release()
-
-        self.loop.create_task(fn())
+        self.groups.setdefault(group, set()).add(handler)
+        self.groups = OrderedDict(sorted(self.groups.items()))
+        log.debug(f"Added handler %s to group %s. Groups: {self.groups}", handler, group)
 
     def remove_handler(self, handler, group: int):
-        async def fn():
-            for lock in self.locks_list:
-                await lock.acquire()
-
-            try:
-                if group not in self.groups:
-                    raise ValueError(f"Group {group} does not exist. Handler was not removed.")
-
-                self.groups[group].remove(handler)
-            finally:
-                for lock in self.locks_list:
-                    lock.release()
-
-        self.loop.create_task(fn())
+        self.groups.setdefault(group, set()).discard(handler)
+        log.debug("Removed handler %s from group %s", handler, group)
 
     def add_middleware(self, middleware: Middleware):
-        async def fn():
-            for lock in self.locks_list:
-                await lock.acquire()
-
-            try:
-                self.middlewares.append(middleware)
-            finally:
-                for lock in self.locks_list:
-                    lock.release()
-
-        self.loop.create_task(fn())
+        self.middlewares.append(middleware)
 
     def remove_middleware(self, middleware: Middleware):
-        async def fn():
-            for lock in self.locks_list:
-                await lock.acquire()
-
-            try:
-                self.middlewares.remove(middleware)
-            finally:
-                for lock in self.locks_list:
-                    lock.release()
-
-        self.loop.create_task(fn())
+        self.middlewares.remove(middleware)
 
     def __prepare_middlewares(self) -> Iterator[Middleware]:
         yield from reversed(self.middlewares)
@@ -288,13 +241,13 @@ class Dispatcher:
                     else:
                         await self.handle_update(update, parsed_update, handler_type, users, chats)
             except pylogram.errors.lib_errors.StopPropagation:
-                pass
+                continue
             except Exception as e:
                 log.exception(e)
 
     async def handle_update(self, update, parsed_update, handler_type, users, chats):
-        for group in self.groups.values():
-            for handler in group:
+        for group_id, group in self.groups.items():
+            for handler in group.copy():
                 args = None
 
                 if isinstance(handler, handler_type):
@@ -304,7 +257,6 @@ class Dispatcher:
                     except Exception as e:
                         log.exception(e)
                         continue
-
                 elif isinstance(handler, RawUpdateHandler):
                     args = (update, users, chats)
 
@@ -312,15 +264,7 @@ class Dispatcher:
                     continue
 
                 try:
-                    if inspect.iscoroutinefunction(handler.callback):
-                        await handler.callback(self.client, *args)
-                    else:
-                        await self.loop.run_in_executor(
-                            self.client.executor,
-                            handler.callback,
-                            self.client,
-                            *args
-                        )
+                    await handler.callback(self.client, *args)
                 except pylogram.errors.lib_errors.StopPropagation:
                     raise
                 except pylogram.errors.lib_errors.ContinuePropagation:

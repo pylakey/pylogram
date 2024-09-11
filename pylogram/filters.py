@@ -16,18 +16,27 @@
 #
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with Pylogram.  If not, see <http://www.gnu.org/licenses/>.
-
+import asyncio
 import inspect
 import re
-from typing import Callable, Union, List, Pattern
+from typing import List
+from typing import Pattern
+from typing import Union
 
 import pylogram
 from pylogram import enums
-from pylogram.types import Message, CallbackQuery, InlineQuery, InlineKeyboardMarkup, ReplyKeyboardMarkup, Update
+from pylogram import typevars
+from pylogram.types import CallbackQuery
+from pylogram.types import InlineKeyboardMarkup
+from pylogram.types import InlineQuery
+from pylogram.types import Message
+from pylogram.types import ReplyKeyboardMarkup
+from pylogram.types import Update
+from pylogram.typevars import FilterCallable
 
 
 class Filter:
-    async def __call__(self, client: "pylogram.Client", update: Update):
+    async def __call__(self, client: typevars.Client, update: typevars.Update):
         raise NotImplementedError
 
     def __invert__(self):
@@ -44,15 +53,11 @@ class InvertFilter(Filter):
     def __init__(self, base):
         self.base = base
 
-    async def __call__(self, client: "pylogram.Client", update: Update):
+    async def __call__(self, client: typevars.Client, update: typevars.Update):
         if inspect.iscoroutinefunction(self.base.__call__):
             x = await self.base(client, update)
         else:
-            x = await client.loop.run_in_executor(
-                client.executor,
-                self.base,
-                client, update
-            )
+            x = await asyncio.to_thread(self.base, client, update)
 
         return not x
 
@@ -62,15 +67,11 @@ class AndFilter(Filter):
         self.base = base
         self.other = other
 
-    async def __call__(self, client: "pylogram.Client", update: Update):
+    async def __call__(self, client: typevars.Client, update: typevars.Update):
         if inspect.iscoroutinefunction(self.base.__call__):
             x = await self.base(client, update)
         else:
-            x = await client.loop.run_in_executor(
-                client.executor,
-                self.base,
-                client, update
-            )
+            x = await asyncio.to_thread(self.base, client, update)
 
         # short circuit
         if not x:
@@ -79,11 +80,7 @@ class AndFilter(Filter):
         if inspect.iscoroutinefunction(self.other.__call__):
             y = await self.other(client, update)
         else:
-            y = await client.loop.run_in_executor(
-                client.executor,
-                self.other,
-                client, update
-            )
+            y = await asyncio.to_thread(self.other, client, update)
 
         return x and y
 
@@ -93,15 +90,11 @@ class OrFilter(Filter):
         self.base = base
         self.other = other
 
-    async def __call__(self, client: "pylogram.Client", update: Update):
+    async def __call__(self, client: typevars.Client, update: typevars.Update):
         if inspect.iscoroutinefunction(self.base.__call__):
             x = await self.base(client, update)
         else:
-            x = await client.loop.run_in_executor(
-                client.executor,
-                self.base,
-                client, update
-            )
+            x = await asyncio.to_thread(self.base, client, update)
 
         # short circuit
         if x:
@@ -110,11 +103,7 @@ class OrFilter(Filter):
         if inspect.iscoroutinefunction(self.other.__call__):
             y = await self.other(client, update)
         else:
-            y = await client.loop.run_in_executor(
-                client.executor,
-                self.other,
-                client, update
-            )
+            y = await asyncio.to_thread(self.other, client, update)
 
         return x or y
 
@@ -122,7 +111,7 @@ class OrFilter(Filter):
 CUSTOM_FILTER_NAME = "CustomFilter"
 
 
-def create(func: Callable, name: str = None, **kwargs) -> Filter:
+def create(func: FilterCallable, name: str = None, **kwargs) -> Filter:
     """Easily create a custom filter.
 
     Custom filters give you extra control over which updates are allowed or not to be processed by your handlers.
@@ -784,6 +773,7 @@ def command(commands: Union[str, List[str]], prefixes: Union[str, List[str]] = "
             without_prefix = text[len(prefix):]
 
             for cmd in flt.commands:
+                # noinspection RegExpUnnecessaryNonCapturingGroup
                 if not re.match(rf"^(?:{cmd}(?:@?{username})?)(?:\s|$)", without_prefix,
                                 flags=re.IGNORECASE if not flt.case_sensitive else 0):
                     continue

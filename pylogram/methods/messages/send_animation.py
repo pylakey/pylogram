@@ -24,6 +24,7 @@ from typing import Union, BinaryIO, List, Optional, Callable
 
 import pylogram
 from pylogram import enums
+from pylogram import typevars
 from pylogram.errors.lib_errors import StopTransmission
 from pylogram import raw
 from pylogram import types
@@ -57,7 +58,7 @@ class SendAnimation:
             "types.ReplyKeyboardRemove",
             "types.ForceReply"
         ] = None,
-        progress: Callable = None,
+        progress: typevars.ProgressCallable = None,
         progress_args: tuple = ()
     ) -> Optional["types.Message"]:
         """Send animation files (animation or H.264/MPEG-4 AVC video without sound).

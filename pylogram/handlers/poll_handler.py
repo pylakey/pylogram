@@ -20,6 +20,7 @@
 from typing import Callable
 
 from .handler import Handler
+from .handler import HandlerCallable
 
 
 class PollHandler(Handler):
@@ -47,5 +48,5 @@ class PollHandler(Handler):
             The received poll.
     """
 
-    def __init__(self, callback: Callable, filters=None):
+    def __init__(self, callback: HandlerCallable, filters=None):
         super().__init__(callback, filters)

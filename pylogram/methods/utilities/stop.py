@@ -16,14 +16,15 @@
 #
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with Pylogram.  If not, see <http://www.gnu.org/licenses/>.
+import asyncio
 
 import pylogram
 
 
 class Stop:
     async def stop(
-        self: "pylogram.Client",
-        block: bool = True
+            self: "pylogram.Client",
+            block: bool = True
     ):
         """Stop the Client.
 
@@ -65,6 +66,6 @@ class Stop:
         if block:
             await do_it()
         else:
-            self.loop.create_task(do_it())
+            _ = asyncio.create_task(do_it())
 
         return self

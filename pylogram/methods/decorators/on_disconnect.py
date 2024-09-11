@@ -17,20 +17,20 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with Pylogram.  If not, see <http://www.gnu.org/licenses/>.
 
-from typing import Callable
-
 import pylogram
+from pylogram.typevars import HandlerCallable
+from pylogram.typevars import HandlerDecorator
 
 
 class OnDisconnect:
-    def on_disconnect(self=None) -> Callable:
+    def on_disconnect(self=None) -> HandlerDecorator:
         """Decorator for handling disconnections.
 
         This does the same thing as :meth:`~pylogram.Client.add_handler` using the
         :obj:`~pylogram.handlers.DisconnectHandler`.
         """
 
-        def decorator(func: Callable) -> Callable:
+        def decorator(func: HandlerCallable) -> HandlerCallable:
             if isinstance(self, pylogram.Client):
                 self.add_handler(pylogram.handlers.DisconnectHandler(func))
             else:

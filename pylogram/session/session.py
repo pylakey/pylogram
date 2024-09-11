@@ -99,7 +99,6 @@ class Session:
         self.ping_task_event = asyncio.Event()
         self.recv_task = None
         self.is_started = asyncio.Event()
-        self.loop = asyncio.get_event_loop()
         self.background_tasks = set()
         self.updates_handling_tasks = set()
         self.connection_protocol_class = connection_protocol_class
@@ -125,7 +124,7 @@ class Session:
 
             try:
                 await self.connection.connect()
-                self.recv_task = self.loop.create_task(self.recv_worker())
+                self.recv_task = asyncio.create_task(self.recv_worker())
                 await self.send(raw.functions.Ping(ping_id=0), timeout=self.START_TIMEOUT)
 
                 if not self.is_cdn:
@@ -146,7 +145,7 @@ class Session:
                         timeout=self.START_TIMEOUT
                     )
 
-                self.ping_task = self.loop.create_task(self.ping_worker())
+                self.ping_task = asyncio.create_task(self.ping_worker())
 
                 log.info("Session initialized: Layer %s", layer)
                 log.info("Device: %s - %s", self.client.device_model, self.client.app_version)
@@ -196,14 +195,13 @@ class Session:
     def _create_task(self, coro) -> asyncio.Task:
         # Use Best Practices from official python docs
         # https://docs.python.org/3/library/asyncio-task.html#asyncio.create_task
-        t = self.loop.create_task(coro)
+        t = asyncio.create_task(coro)
         self.background_tasks.add(t)
         t.add_done_callback(self.background_tasks.discard)
         return t
 
     async def handle_packet(self, packet):
-        data = await self.loop.run_in_executor(
-            pylogram.crypto_executor,
+        data = await asyncio.to_thread(
             mtproto.unpack,
             BytesIO(packet),
             self.session_id,
@@ -347,8 +345,7 @@ class Session:
         #     self.auth_key,
         #     self.auth_key_id
         # )
-        payload = await self.loop.run_in_executor(
-            pylogram.crypto_executor,
+        payload = await asyncio.to_thread(
             mtproto.pack,
             message,
             self.salt,

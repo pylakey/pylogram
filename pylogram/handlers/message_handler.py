@@ -20,6 +20,7 @@
 from typing import Callable
 
 from .handler import Handler
+from .handler import HandlerCallable
 
 
 class MessageHandler(Handler):
@@ -46,5 +47,5 @@ class MessageHandler(Handler):
             The received message.
     """
 
-    def __init__(self, callback: Callable, filters=None):
+    def __init__(self, callback: HandlerCallable, filters=None):
         super().__init__(callback, filters)

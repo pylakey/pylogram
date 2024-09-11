@@ -35,7 +35,6 @@ class TCP:
         self.reader: Optional[asyncio.StreamReader] = None
         self.writer: Optional[asyncio.StreamWriter] = None
         self.lock = asyncio.Lock()
-        self.loop = asyncio.get_event_loop()
         self.proxy = self._parse_proxy(proxy) if proxy else None
         self.ipv6 = ipv6
 

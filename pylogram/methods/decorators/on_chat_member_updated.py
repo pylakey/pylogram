@@ -21,6 +21,7 @@ from typing import Callable
 
 import pylogram
 from pylogram.filters import Filter
+from pylogram.typevars import HandlerCallable
 
 
 class OnChatMemberUpdated:
@@ -42,7 +43,7 @@ class OnChatMemberUpdated:
                 The group identifier, defaults to 0.
         """
 
-        def decorator(func: Callable) -> Callable:
+        def decorator(func: HandlerCallable) -> Callable:
             if isinstance(self, pylogram.Client):
                 self.add_handler(pylogram.handlers.ChatMemberUpdatedHandler(func, filters), group)
             elif isinstance(self, Filter) or self is None:

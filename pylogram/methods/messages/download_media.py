@@ -20,24 +20,30 @@
 import asyncio
 import os
 from datetime import datetime
-from typing import Union, Optional, Callable, BinaryIO
+from typing import BinaryIO
+from typing import Callable
+from typing import Optional
+from typing import Union
 
 import pylogram
 from pylogram import types
-from pylogram.file_id import FileId, FileType, PHOTO_TYPES
+from pylogram import typevars
+from pylogram.file_id import FileId
+from pylogram.file_id import FileType
+from pylogram.file_id import PHOTO_TYPES
 
 DEFAULT_DOWNLOAD_DIR = "downloads/"
 
 
 class DownloadMedia:
     async def download_media(
-        self: "pylogram.Client",
-        message: Union["types.Message", str],
-        file_name: str = DEFAULT_DOWNLOAD_DIR,
-        in_memory: bool = False,
-        block: bool = True,
-        progress: Callable = None,
-        progress_args: tuple = ()
+            self: "pylogram.Client",
+            message: Union["types.Message", str],
+            file_name: str = DEFAULT_DOWNLOAD_DIR,
+            in_memory: bool = False,
+            block: bool = True,
+            progress: typevars.ProgressCallable = None,
+            progress_args: tuple = ()
     ) -> Optional[Union[str, BinaryIO]]:
         """Download the media from a message.
 
@@ -184,4 +190,4 @@ class DownloadMedia:
         if block:
             return await downloader
         else:
-            _ = asyncio.get_event_loop().create_task(downloader)
+            _ = asyncio.create_task(downloader)

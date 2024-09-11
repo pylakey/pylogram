@@ -17,12 +17,13 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with Pylogram.  If not, see <http://www.gnu.org/licenses/>.
 
-from typing import List, Callable
+from typing import List
 
 import pylogram
 from pylogram.filters import Filter
 from pylogram.types import Message
 from .handler import Handler
+from .handler import HandlerCallable
 
 
 class DeletedMessagesHandler(Handler):
@@ -49,7 +50,7 @@ class DeletedMessagesHandler(Handler):
             The deleted messages, as list.
     """
 
-    def __init__(self, callback: Callable, filters: Filter = None):
+    def __init__(self, callback: HandlerCallable, filters: Filter = None):
         super().__init__(callback, filters)
 
     async def check(self, client: "pylogram.Client", messages: List[Message]):

@@ -46,6 +46,7 @@ import pylogram.errors.lib_errors
 from pylogram import __version__
 from pylogram import enums
 from pylogram import raw
+from pylogram import typevars
 from pylogram import utils
 from pylogram.connection.transport import TCP
 from pylogram.connection.transport import TCPFull
@@ -312,7 +313,6 @@ class Client(Methods):
         self.updates_watchdog_task = None
         self.updates_watchdog_event = asyncio.Event()
         self.last_update_time = datetime.now()
-        self.loop = asyncio.get_event_loop()
         self.ignore_channel_updates_except = ignore_channel_updates_except
         self.dialogs: List[Dialog] = []
         self.dialogs_lock: asyncio.Lock = asyncio.Lock()
@@ -808,7 +808,7 @@ class Client(Methods):
             file_size: int = 0,
             limit: int = 0,
             offset: int = 0,
-            progress: Callable = None,
+            progress: typevars.ProgressCallable = None,
             progress_args: tuple = ()
     ) -> Optional[AsyncGenerator[bytes, None]]:
         async with self.get_file_semaphore:
@@ -924,7 +924,7 @@ class Client(Methods):
                             if inspect.iscoroutinefunction(progress):
                                 await func()
                             else:
-                                await self.loop.run_in_executor(self.executor, func)
+                                await asyncio.to_thread(func)
 
                         if len(chunk) < chunk_size or current >= total:
                             break
@@ -1021,7 +1021,7 @@ class Client(Methods):
                                 if inspect.iscoroutinefunction(progress):
                                     await func()
                                 else:
-                                    await self.loop.run_in_executor(self.executor, func)
+                                    await asyncio.to_thread(func)
 
                             if len(chunk) < chunk_size or current >= total:
                                 break

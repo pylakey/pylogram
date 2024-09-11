@@ -16,12 +16,11 @@
 #
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with Pylogram.  If not, see <http://www.gnu.org/licenses/>.
-
+import asyncio
 import logging
 import os
 from typing import Optional
 
-import pylogram
 from pylogram.crypto import aes
 from .tcp import TCP
 
@@ -59,7 +58,7 @@ class TCPAbridgedO(TCP):
     async def send(self, data: bytes, *args):
         length = len(data) // 4
         data = (bytes([length]) if length <= 126 else b"\x7f" + length.to_bytes(3, "little")) + data
-        payload = await self.loop.run_in_executor(pylogram.crypto_executor, aes.ctr256_encrypt, data, *self.encrypt)
+        payload = await asyncio.to_thread(aes.ctr256_encrypt, data, *self.encrypt)
 
         await super().send(payload)
 
@@ -84,4 +83,4 @@ class TCPAbridgedO(TCP):
         if data is None:
             return None
 
-        return await self.loop.run_in_executor(pylogram.crypto_executor, aes.ctr256_decrypt, data, *self.decrypt)
+        return await asyncio.to_thread(aes.ctr256_decrypt, data, *self.decrypt)

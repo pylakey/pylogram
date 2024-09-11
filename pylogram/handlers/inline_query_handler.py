@@ -20,6 +20,7 @@
 from typing import Callable
 
 from .handler import Handler
+from .handler import HandlerCallable
 
 
 class InlineQueryHandler(Handler):
@@ -46,5 +47,5 @@ class InlineQueryHandler(Handler):
             The received inline query.
     """
 
-    def __init__(self, callback: Callable, filters=None):
+    def __init__(self, callback: HandlerCallable, filters=None):
         super().__init__(callback, filters)

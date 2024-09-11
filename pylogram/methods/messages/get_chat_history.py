@@ -18,20 +18,27 @@
 #  along with Pylogram.  If not, see <http://www.gnu.org/licenses/>.
 
 from datetime import datetime
-from typing import Union, Optional, AsyncGenerator
+from typing import AsyncGenerator
+from typing import Optional
+from typing import Union
 
 import pylogram
-from pylogram import types, raw, utils
+from pylogram import raw
+from pylogram import types
+from pylogram import utils
 
 
 async def get_chunk(
-    *,
-    client: "pylogram.Client",
-    chat_id: Union[int, str],
-    limit: int = 0,
-    offset: int = 0,
-    from_message_id: int = 0,
-    from_date: datetime = utils.zero_datetime()
+        *,
+        client: "pylogram.Client",
+        chat_id: Union[int, str],
+        limit: int = 0,
+        offset: int = 0,
+        from_message_id: int = 0,
+        from_date: datetime = utils.zero_datetime(),
+        max_id: int = 0,
+        min_id: int = 0,
+        _hash: int = 0
 ):
     messages = await client.invoke(
         raw.functions.messages.GetHistory(
@@ -40,9 +47,9 @@ async def get_chunk(
             offset_date=utils.datetime_to_timestamp(from_date),
             add_offset=offset,
             limit=limit,
-            max_id=0,
-            min_id=0,
-            hash=0
+            max_id=max_id,
+            min_id=min_id,
+            hash=_hash
         ),
         sleep_threshold=60
     )
@@ -52,12 +59,14 @@ async def get_chunk(
 
 class GetChatHistory:
     async def get_chat_history(
-        self: "pylogram.Client",
-        chat_id: Union[int, str],
-        limit: int = 0,
-        offset: int = 0,
-        offset_id: int = 0,
-        offset_date: datetime = utils.zero_datetime()
+            self: "pylogram.Client",
+            chat_id: Union[int, str],
+            limit: int = 0,
+            offset: int = 0,
+            offset_id: int = 0,
+            offset_date: datetime = utils.zero_datetime(),
+            max_id: int = 0,
+            min_id: int = 0,
     ) -> Optional[AsyncGenerator["types.Message", None]]:
         """Get messages from a chat history.
 
@@ -85,6 +94,12 @@ class GetChatHistory:
             offset_date (:py:obj:`~datetime.datetime`, *optional*):
                 Pass a date as offset to retrieve only older messages starting from that date.
 
+            max_id (``int``, *optional*):
+                Identifier of the last message to be returned.
+
+            min_id (``int``, *optional*):
+                Identifier of the first message to be returned.
+
         Returns:
             ``Generator``: A generator yielding :obj:`~pylogram.types.Message` objects.
 
@@ -105,7 +120,9 @@ class GetChatHistory:
                 limit=limit,
                 offset=offset,
                 from_message_id=offset_id,
-                from_date=offset_date
+                from_date=offset_date,
+                max_id=max_id,
+                min_id=min_id,
             )
 
             if not messages:
