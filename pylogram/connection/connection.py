@@ -22,6 +22,8 @@ import logging
 from typing import Optional
 from typing import Type
 
+import python_socks
+
 from .transport import TCP
 from .transport import TCPFull
 from ..session.internals import DataCenter
@@ -57,6 +59,10 @@ class Connection:
             try:
                 log.info(f"[%s] Connecting using protocol...", self.protocol_class.__name__)
                 await self.protocol.connect(self.address)
+            except python_socks._errors.ProxyTimeoutError as e:
+                log.warning("[%s] Unable to connect due to proxy issues: %s", self.protocol_class.__name__, e)
+                await self.protocol.close()
+                await asyncio.sleep(1)
             except OSError as e:
                 log.warning("[%s] Unable to connect due to network issues: %s", self.protocol_class.__name__, e)
                 await self.protocol.close()
