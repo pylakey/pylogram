@@ -75,16 +75,15 @@ class Dispatcher:
     CHOSEN_INLINE_RESULT_UPDATES = (UpdateBotInlineSend,)
     CHAT_JOIN_REQUEST_UPDATES = (UpdateBotChatInviteRequester,)
 
-    middlewares: List[Middleware] = []
-    __middlewares_handlers: Iterable[Middleware]
-    __run_middlewares: Optional[bool] = None
-
     def __init__(self, client: "pylogram.Client"):
         self.client = client
         self.handler_worker_tasks = []
         self.locks_list = []
         self.updates_queue = asyncio.Queue()
         self.groups: dict[int, set[Handler]] = OrderedDict()
+        self.middlewares: List[Middleware] = []
+        self.__middlewares_handlers: Iterable[Middleware]
+        self.__run_middlewares: Optional[bool] = None
 
         async def message_parser(update, users, chats):
             return (
