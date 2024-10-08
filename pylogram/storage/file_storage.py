@@ -40,12 +40,14 @@ class FileStorage(SQLiteStorage):
         if version == 1:
             with self.conn:
                 self.conn.execute("DELETE FROM peers")
+                self.conn.commit()
 
             version += 1
 
         if version == 2:
             with self.conn:
                 self.conn.execute("ALTER TABLE sessions ADD api_id INTEGER")
+                self.conn.commit()
 
             version += 1
 

@@ -224,3 +224,4 @@ class SQLiteStorage(Storage):
                     "UPDATE version SET number = ?",
                     (value,)
                 )
+                self.conn.commit()
