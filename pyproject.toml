@@ -10,13 +10,8 @@ authors = [
     { name = "Dan", email = "dan@pyrogram.org" },
     { name = "Pylakey", email = "pylakey@protonmail.com" },
 ]
-maintainers = [
-    { name = "Pylakey", email = "pylakey@protonmail.com" },
-]
-dependencies = [
-    "tgcrypto~=1.2.5",
-    "python-socks[asyncio]>=2.4.4,<2.6.0"
-]
+maintainers = [{ name = "Pylakey", email = "pylakey@protonmail.com" }]
+dependencies = ["tgcrypto~=1.2.5", "python-socks[asyncio]>=2.4.4,<2.6.0"]
 readme = "README.md"
 requires-python = ">=3.10"
 classifiers = [
@@ -38,10 +33,19 @@ classifiers = [
     "Topic :: Communications :: Chat",
     "Topic :: Software Development :: Libraries",
     "Topic :: Software Development :: Libraries :: Python Modules",
-    "Topic :: Software Development :: Libraries :: Application Frameworks"
+    "Topic :: Software Development :: Libraries :: Application Frameworks",
 ]
-license = { file = "LICENSE" }
-keywords = ["telegram", "chat", "messenger", "mtproto", "api", "client", "library", "python"]
+license = "LGPL-3.0"
+keywords = [
+    "telegram",
+    "chat",
+    "messenger",
+    "mtproto",
+    "api",
+    "client",
+    "library",
+    "python",
+]
 
 [project.urls]
 Source = "https://github.com/pylakey/pylogram"
@@ -57,6 +61,7 @@ path = "pylogram/__init__.py"
 
 # Used to call hatch_build.py
 [tool.hatch.build.hooks.custom]
+path = "hatch_build.py"
 
 [tool.hatch.metadata]
 allow-direct-references = true
@@ -72,6 +77,7 @@ exclude = [
     ".pre-commit-config.yaml",
     "CONTRIBUTING.md",
     "NEWS.rst",
+    "LICENSE.txt",
     "requirements.lock",
     "requirements-dev.lock",
 ]
