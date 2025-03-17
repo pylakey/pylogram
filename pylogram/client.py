@@ -26,52 +26,35 @@ import platform
 import re
 import shutil
 from concurrent.futures.thread import ThreadPoolExecutor
-from datetime import datetime
-from datetime import timedelta
+from datetime import datetime, timedelta
 from hashlib import sha256
 from importlib import import_module
-from io import BytesIO
-from io import StringIO
+from io import BytesIO, StringIO
 from mimetypes import MimeTypes
 from pathlib import Path
-from typing import AsyncGenerator
-from typing import Callable
-from typing import List
-from typing import Optional
-from typing import Type
-from typing import Union
+from typing import AsyncGenerator, List, Optional, Type, Union
 
 import pylogram
 import pylogram.errors.lib_errors
-from pylogram import __version__
-from pylogram import enums
-from pylogram import raw
-from pylogram import typevars
-from pylogram import utils
-from pylogram.connection.transport import TCP
-from pylogram.connection.transport import TCPFull
+from pylogram import __version__, enums, raw, typevars, utils
+from pylogram.connection.transport import TCP, TCPFull
 from pylogram.crypto import aes
 from pylogram.dispatcher import Dispatcher
-from pylogram.errors import CDNFileHashMismatch
-from pylogram.errors import ChannelPrivate
-from pylogram.errors import SessionPasswordNeeded
-from pylogram.errors import VolumeLocNotFound
-from pylogram.file_id import FileId
-from pylogram.file_id import FileType
-from pylogram.file_id import ThumbnailSource
+from pylogram.errors import (
+    CDNFileHashMismatch,
+    ChannelPrivate,
+    SessionPasswordNeeded,
+    VolumeLocNotFound,
+)
+from pylogram.file_id import FileId, FileType, ThumbnailSource
 from pylogram.handlers.handler import Handler
 from pylogram.methods import Methods
 from pylogram.mime_types import mime_types
 from pylogram.parser import Parser
-from pylogram.session import Auth
-from pylogram.session import Session
+from pylogram.session import Auth, Session
 from pylogram.session.internals import MsgId
-from pylogram.storage import FileStorage
-from pylogram.storage import MemoryStorage
-from pylogram.storage import Storage
-from pylogram.types import Dialog
-from pylogram.types import TermsOfService
-from pylogram.types import User
+from pylogram.storage import FileStorage, MemoryStorage, Storage
+from pylogram.types import Dialog, TermsOfService, User
 from pylogram.utils import ainput
 
 log = logging.getLogger(__name__)
@@ -212,41 +195,42 @@ class Client(Methods):
     mimetypes.readfp(StringIO(mime_types))
 
     def __init__(
-            self,
-            session_name: str,
-            *,
-            session_storage: Optional[Storage] = None,
-            api_id: Union[int, str] = None,
-            api_hash: str = None,
-            app_version: str = APP_VERSION,
-            device_model: str = DEVICE_MODEL,
-            system_version: str = SYSTEM_VERSION,
-            system_lang_code: str = SYSTEM_LANG_CODE,
-            lang_code: str = LANG_CODE,
-            lang_pack: str = "",
-            ipv6: bool = False,
-            proxy: dict = None,
-            test_mode: bool = False,
-            bot_token: str = None,
-            session_string: str = None,
-            in_memory: bool = None,
-            phone_number: str = None,
-            phone_code: str = None,
-            password: str = None,
-            workers: int = WORKERS,
-            workdir: str = DEFAULT_WORKDIR,
-            plugins: dict = None,
-            parse_mode: "enums.ParseMode" = enums.ParseMode.HTML,
-            no_updates: bool = None,
-            takeout: bool = None,
-            sleep_threshold: int = Session.SLEEP_THRESHOLD,
-            hide_password: bool = False,
-            max_concurrent_transmissions: int = MAX_CONCURRENT_TRANSMISSIONS,
-            ignore_channel_updates_except: List[int] = None,
-            message_cache_size: int = 10000,
-            first_name: str = None,
-            last_name: str = None,
-            connection_protocol_class: Type[TCP] = TCPFull,
+        self,
+        session_name: str,
+        *,
+        session_storage: Optional[Storage] = None,
+        api_id: Union[int, str] = None,
+        api_hash: str = None,
+        app_version: str = APP_VERSION,
+        device_model: str = DEVICE_MODEL,
+        system_version: str = SYSTEM_VERSION,
+        system_lang_code: str = SYSTEM_LANG_CODE,
+        lang_code: str = LANG_CODE,
+        lang_pack: str = "",
+        ipv6: bool = False,
+        proxy: dict = None,
+        test_mode: bool = False,
+        bot_token: str = None,
+        session_string: str = None,
+        in_memory: bool = None,
+        phone_number: str = None,
+        phone_code: str = None,
+        password: str = None,
+        workers: int = WORKERS,
+        workdir: str = DEFAULT_WORKDIR,
+        plugins: dict = None,
+        parse_mode: "enums.ParseMode" = enums.ParseMode.HTML,
+        no_updates: bool = None,
+        takeout: bool = None,
+        sleep_threshold: int = Session.SLEEP_THRESHOLD,
+        hide_password: bool = False,
+        max_concurrent_transmissions: int = MAX_CONCURRENT_TRANSMISSIONS,
+        ignore_channel_updates_except: List[int] = None,
+        message_cache_size: int = 10000,
+        first_name: str = None,
+        last_name: str = None,
+        connection_protocol_class: Type[TCP] = TCPFull,
+        commit_storage_peers_on_update: bool = False,
     ):
         super().__init__()
 
@@ -281,6 +265,7 @@ class Client(Methods):
         self.max_concurrent_transmissions = max_concurrent_transmissions
         self.executor = ThreadPoolExecutor(self.workers, thread_name_prefix="Handler")
         self.connection_protocol_class = connection_protocol_class
+        self.commit_storage_peers_on_update = commit_storage_peers_on_update
 
         if isinstance(session_storage, Storage):
             self.storage = session_storage
@@ -379,7 +364,7 @@ class Client(Methods):
         if not bool(password):
             password = await ainput(
                 f"Enter password (empty to recover). Hint: {hint}: ",
-                hide=self.hide_password
+                hide=self.hide_password,
             )
 
         return password
@@ -388,7 +373,7 @@ class Client(Methods):
         first_name = self.first_name
 
         if not bool(first_name):
-            first_name = await ainput(f"Enter first name: ")
+            first_name = await ainput("Enter first name: ")
 
         if not bool(first_name):
             raise RuntimeError("The first name required for new authorizations")
@@ -399,7 +384,7 @@ class Client(Methods):
         last_name = self.last_name
 
         if not bool(last_name):
-            last_name = await ainput(f"Enter first name: ")
+            last_name = await ainput("Enter first name: ")
 
         return last_name
 
@@ -429,12 +414,7 @@ class Client(Methods):
 
         first_name = await self.fetch_first_name()
         last_name = await self.fetch_last_name()
-        signed_up = await self.sign_up(
-            self.phone_number,
-            sent_code.phone_code_hash,
-            first_name,
-            last_name or ""
-        )
+        signed_up = await self.sign_up(self.phone_number, sent_code.phone_code_hash, first_name, last_name or "")
 
         if isinstance(signed_in, TermsOfService):
             print("\n" + signed_in.text + "\n")
@@ -480,7 +460,10 @@ class Client(Methods):
 
         self.parse_mode = parse_mode
 
-    async def update_storage_peers(self, peers: List[Union[raw.base.User, raw.base.Chat]]) -> bool:
+    async def update_storage_peers(
+        self,
+        peers: List[Union[raw.base.User, raw.base.Chat]],
+    ) -> bool:
         is_min = False
         parsed_peers = []
 
@@ -496,8 +479,10 @@ class Client(Methods):
                 peer_id = peer.id
                 access_hash = peer.access_hash
                 username = (
-                    peer.username.lower() if peer.username
-                    else peer.usernames[0].username.lower() if peer.usernames
+                    peer.username.lower()
+                    if peer.username
+                    else peer.usernames[0].username.lower()
+                    if peer.usernames
                     else None
                 )
                 phone_number = peer.phone
@@ -508,8 +493,10 @@ class Client(Methods):
                 peer_id = utils.get_channel_id(peer.id)
                 access_hash = peer.access_hash
                 username = (
-                    peer.username.lower() if peer.username
-                    else peer.usernames[0].username.lower() if peer.usernames
+                    peer.username.lower()
+                    if peer.username
+                    else peer.usernames[0].username.lower()
+                    if peer.usernames
                     else None
                 )
                 peer_type = "channel" if peer.broadcast else "supergroup"
@@ -529,7 +516,9 @@ class Client(Methods):
             parsed_peers.append((peer_id, access_hash, peer_type, username, phone_number))
 
         await self.storage.update_peers(parsed_peers)
-        await self.storage.save()
+
+        if self.commit_storage_peers_on_update:
+            await self.storage.save()
 
         return is_min
 
@@ -537,21 +526,21 @@ class Client(Methods):
         self.last_update_time = datetime.now()
 
         if isinstance(updates, (raw.types.Updates, raw.types.UpdatesCombined)):
-            is_min = any((
-                await self.update_storage_peers(updates.users),
-                await self.update_storage_peers(updates.chats),
-            ))
+            is_min = any(
+                (
+                    await self.update_storage_peers(updates.users),
+                    await self.update_storage_peers(updates.chats),
+                )
+            )
 
             users = {u.id: u for u in updates.users}
             chats = {c.id: c for c in updates.chats}
 
             for update in updates.updates:
                 channel_id = getattr(
-                    getattr(
-                        getattr(
-                            update, "message", None
-                        ), "peer_id", None
-                    ), "channel_id", None
+                    getattr(getattr(update, "message", None), "peer_id", None),
+                    "channel_id",
+                    None,
                 ) or getattr(update, "channel_id", None)
 
                 pts = getattr(update, "pts", None)
@@ -564,8 +553,8 @@ class Client(Methods):
                     message = update.message
 
                     if (
-                            bool(self.ignore_channel_updates_except) and
-                            utils.get_channel_id(channel_id) not in self.ignore_channel_updates_except
+                        bool(self.ignore_channel_updates_except)
+                        and utils.get_channel_id(channel_id) not in self.ignore_channel_updates_except
                     ):
                         continue
 
@@ -575,13 +564,15 @@ class Client(Methods):
                                 raw.functions.updates.GetChannelDifference(
                                     channel=await self.resolve_peer(utils.get_channel_id(channel_id)),
                                     filter=raw.types.ChannelMessagesFilter(
-                                        ranges=[raw.types.MessageRange(
-                                            min_id=update.message.id,
-                                            max_id=update.message.id
-                                        )]
+                                        ranges=[
+                                            raw.types.MessageRange(
+                                                min_id=update.message.id,
+                                                max_id=update.message.id,
+                                            )
+                                        ]
                                     ),
                                     pts=pts - pts_count,
-                                    limit=pts
+                                    limit=pts,
                                 )
                             )
                         except ChannelPrivate:
@@ -594,23 +585,21 @@ class Client(Methods):
                 self.dispatcher.updates_queue.put_nowait((update, users, chats))
         elif isinstance(updates, (raw.types.UpdateShortMessage, raw.types.UpdateShortChatMessage)):
             diff = await self.invoke(
-                raw.functions.updates.GetDifference(
-                    pts=updates.pts - updates.pts_count,
-                    date=updates.date,
-                    qts=-1
-                )
+                raw.functions.updates.GetDifference(pts=updates.pts - updates.pts_count, date=updates.date, qts=-1)
             )
 
             if diff.new_messages:
-                self.dispatcher.updates_queue.put_nowait((
-                    raw.types.UpdateNewMessage(
-                        message=diff.new_messages[0],
-                        pts=updates.pts,
-                        pts_count=updates.pts_count
-                    ),
-                    {u.id: u for u in diff.users},
-                    {c.id: c for c in diff.chats}
-                ))
+                self.dispatcher.updates_queue.put_nowait(
+                    (
+                        raw.types.UpdateNewMessage(
+                            message=diff.new_messages[0],
+                            pts=updates.pts,
+                            pts_count=updates.pts_count,
+                        ),
+                        {u.id: u for u in diff.users},
+                        {c.id: c for c in diff.chats},
+                    )
+                )
             else:
                 if diff.other_updates:  # The other_updates list can be empty
                     self.dispatcher.updates_queue.put_nowait((diff.other_updates[0], {}, {}))
@@ -622,18 +611,18 @@ class Client(Methods):
     async def load_session(self):
         await self.storage.open()
 
-        session_empty = any([
-            await self.storage.test_mode() is None,
-            await self.storage.auth_key() is None,
-            await self.storage.user_id() is None,
-            await self.storage.is_bot() is None
-        ])
+        session_empty = any(
+            [
+                await self.storage.test_mode() is None,
+                await self.storage.auth_key() is None,
+                await self.storage.user_id() is None,
+                await self.storage.is_bot() is None,
+            ]
+        )
 
         if session_empty:
             if not self.api_id or not self.api_hash:
-                raise AttributeError(
-                    "The API key is required for new authorizations."
-                )
+                raise AttributeError("The API key is required for new authorizations.")
 
             await self.storage.api_id(self.api_id)
             await self.storage.dc_id(2)
@@ -644,7 +633,7 @@ class Client(Methods):
                     self,
                     await self.storage.dc_id(),
                     await self.storage.test_mode(),
-                    connection_protocol_class=self.connection_protocol_class
+                    connection_protocol_class=self.connection_protocol_class,
                 ).create()
             )
             await self.storage.user_id(None)
@@ -659,10 +648,7 @@ class Client(Methods):
 
             for option in ["include", "exclude"]:
                 if plugins.get(option, []):
-                    plugins[option] = [
-                        (i.split()[0], i.split()[1:] or None)
-                        for i in self.plugins[option]
-                    ]
+                    plugins[option] = [(i.split()[0], i.split()[1:] or None) for i in self.plugins[option]]
         else:
             return
 
@@ -675,7 +661,7 @@ class Client(Methods):
 
             if not include:
                 for path in sorted(Path(root.replace(".", "/")).rglob("*.py")):
-                    module_path = '.'.join(path.parent.parts + (path.stem,))
+                    module_path = ".".join(path.parent.parts + (path.stem,))
                     module = import_module(module_path)
 
                     for name in vars(module).keys():
@@ -685,8 +671,15 @@ class Client(Methods):
                                 if isinstance(handler, Handler) and isinstance(group, int):
                                     self.add_handler(handler, group)
 
-                                    log.info('[{}] [LOAD] {}("{}") in group {} from "{}"'.format(
-                                        self.session_name, type(handler).__name__, name, group, module_path))
+                                    log.info(
+                                        '[{}] [LOAD] {}("{}") in group {} from "{}"'.format(
+                                            self.session_name,
+                                            type(handler).__name__,
+                                            name,
+                                            group,
+                                            module_path,
+                                        )
+                                    )
 
                                     count += 1
                         except Exception:
@@ -703,11 +696,19 @@ class Client(Methods):
                     try:
                         module = import_module(module_path)
                     except ImportError:
-                        log.warning('[%s] [LOAD] Ignoring non-existent module "%s"', self.session_name, module_path)
+                        log.warning(
+                            '[%s] [LOAD] Ignoring non-existent module "%s"',
+                            self.session_name,
+                            module_path,
+                        )
                         continue
 
                     if "__path__" in dir(module):
-                        log.warning('[%s] [LOAD] Ignoring namespace "%s"', self.session_name, module_path)
+                        log.warning(
+                            '[%s] [LOAD] Ignoring namespace "%s"',
+                            self.session_name,
+                            module_path,
+                        )
                         continue
 
                     if handlers is None:
@@ -721,14 +722,24 @@ class Client(Methods):
                                 if isinstance(handler, Handler) and isinstance(group, int):
                                     self.add_handler(handler, group)
 
-                                    log.info('[{}] [LOAD] {}("{}") in group {} from "{}"'.format(
-                                        self.session_name, type(handler).__name__, name, group, module_path))
+                                    log.info(
+                                        '[{}] [LOAD] {}("{}") in group {} from "{}"'.format(
+                                            self.session_name,
+                                            type(handler).__name__,
+                                            name,
+                                            group,
+                                            module_path,
+                                        )
+                                    )
 
                                     count += 1
                         except Exception:
                             if warn_non_existent_functions:
-                                log.warning('[{}] [LOAD] Ignoring non-existent function "{}" from "{}"'.format(
-                                    self.session_name, name, module_path))
+                                log.warning(
+                                    '[{}] [LOAD] Ignoring non-existent function "{}" from "{}"'.format(
+                                        self.session_name, name, module_path
+                                    )
+                                )
 
             if exclude:
                 for path, handlers in exclude:
@@ -741,11 +752,19 @@ class Client(Methods):
                     try:
                         module = import_module(module_path)
                     except ImportError:
-                        log.warning('[%s] [UNLOAD] Ignoring non-existent module "%s"', self.session_name, module_path)
+                        log.warning(
+                            '[%s] [UNLOAD] Ignoring non-existent module "%s"',
+                            self.session_name,
+                            module_path,
+                        )
                         continue
 
                     if "__path__" in dir(module):
-                        log.warning('[%s] [UNLOAD] Ignoring namespace "%s"', self.session_name, module_path)
+                        log.warning(
+                            '[%s] [UNLOAD] Ignoring namespace "%s"',
+                            self.session_name,
+                            module_path,
+                        )
                         continue
 
                     if handlers is None:
@@ -759,18 +778,31 @@ class Client(Methods):
                                 if isinstance(handler, Handler) and isinstance(group, int):
                                     self.remove_handler(handler, group)
 
-                                    log.info('[{}] [UNLOAD] {}("{}") from group {} in "{}"'.format(
-                                        self.session_name, type(handler).__name__, name, group, module_path))
+                                    log.info(
+                                        '[{}] [UNLOAD] {}("{}") from group {} in "{}"'.format(
+                                            self.session_name,
+                                            type(handler).__name__,
+                                            name,
+                                            group,
+                                            module_path,
+                                        )
+                                    )
 
                                     count -= 1
                         except Exception:
                             if warn_non_existent_functions:
-                                log.warning('[{}] [UNLOAD] Ignoring non-existent function "{}" from "{}"'.format(
-                                    self.session_name, name, module_path))
+                                log.warning(
+                                    '[{}] [UNLOAD] Ignoring non-existent function "{}" from "{}"'.format(
+                                        self.session_name, name, module_path
+                                    )
+                                )
 
             if count > 0:
-                log.info('[{}] Successfully loaded {} plugin{} from "{}"'.format(
-                    self.session_name, count, "s" if count > 1 else "", root))
+                log.info(
+                    '[{}] Successfully loaded {} plugin{} from "{}"'.format(
+                        self.session_name, count, "s" if count > 1 else "", root
+                    )
+                )
             else:
                 log.warning('[%s] No plugin loaded from "%s"', self.session_name, root)
 
@@ -804,52 +836,47 @@ class Client(Methods):
                 return file_path
 
     async def get_file(
-            self,
-            file_id: FileId,
-            file_size: int = 0,
-            limit: int = 0,
-            offset: int = 0,
-            progress: typevars.ProgressCallable = None,
-            progress_args: tuple = ()
+        self,
+        file_id: FileId,
+        file_size: int = 0,
+        limit: int = 0,
+        offset: int = 0,
+        progress: typevars.ProgressCallable = None,
+        progress_args: tuple = (),
     ) -> Optional[AsyncGenerator[bytes, None]]:
         async with self.get_file_semaphore:
             file_type = file_id.file_type
 
             if file_type == FileType.CHAT_PHOTO:
                 if file_id.chat_id > 0:
-                    peer = raw.types.InputPeerUser(
-                        user_id=file_id.chat_id,
-                        access_hash=file_id.chat_access_hash
-                    )
+                    peer = raw.types.InputPeerUser(user_id=file_id.chat_id, access_hash=file_id.chat_access_hash)
                 else:
                     if file_id.chat_access_hash == 0:
-                        peer = raw.types.InputPeerChat(
-                            chat_id=-file_id.chat_id
-                        )
+                        peer = raw.types.InputPeerChat(chat_id=-file_id.chat_id)
                     else:
                         peer = raw.types.InputPeerChannel(
                             channel_id=utils.get_channel_id(file_id.chat_id),
-                            access_hash=file_id.chat_access_hash
+                            access_hash=file_id.chat_access_hash,
                         )
 
                 location = raw.types.InputPeerPhotoFileLocation(
                     peer=peer,
                     photo_id=file_id.media_id,
-                    big=file_id.thumbnail_source == ThumbnailSource.CHAT_PHOTO_BIG
+                    big=file_id.thumbnail_source == ThumbnailSource.CHAT_PHOTO_BIG,
                 )
             elif file_type == FileType.PHOTO:
                 location = raw.types.InputPhotoFileLocation(
                     id=file_id.media_id,
                     access_hash=file_id.access_hash,
                     file_reference=file_id.file_reference,
-                    thumb_size=file_id.thumbnail_size
+                    thumb_size=file_id.thumbnail_size,
                 )
             else:
                 location = raw.types.InputDocumentFileLocation(
                     id=file_id.media_id,
                     access_hash=file_id.access_hash,
                     file_reference=file_id.file_reference,
-                    thumb_size=file_id.thumbnail_size
+                    thumb_size=file_id.thumbnail_size,
                 )
 
             current = 0
@@ -863,7 +890,7 @@ class Client(Methods):
                     self,
                     dc_id,
                     await self.storage.test_mode(),
-                    connection_protocol_class=self.connection_protocol_class
+                    connection_protocol_class=self.connection_protocol_class,
                 ).create()
                 if dc_id != await self.storage.dc_id()
                 else await self.storage.auth_key()
@@ -874,33 +901,22 @@ class Client(Methods):
                 auth_key,
                 await self.storage.test_mode(),
                 is_media=True,
-                connection_protocol_class=self.connection_protocol_class
+                connection_protocol_class=self.connection_protocol_class,
             )
 
             try:
                 await session.start()
 
                 if dc_id != await self.storage.dc_id():
-                    exported_auth = await self.invoke(
-                        raw.functions.auth.ExportAuthorization(
-                            dc_id=dc_id
-                        )
-                    )
+                    exported_auth = await self.invoke(raw.functions.auth.ExportAuthorization(dc_id=dc_id))
 
                     await session.invoke(
-                        raw.functions.auth.ImportAuthorization(
-                            id=exported_auth.id,
-                            bytes=exported_auth.bytes
-                        )
+                        raw.functions.auth.ImportAuthorization(id=exported_auth.id, bytes=exported_auth.bytes)
                     )
 
                 r = await session.invoke(
-                    raw.functions.upload.GetFile(
-                        location=location,
-                        offset=offset_bytes,
-                        limit=chunk_size
-                    ),
-                    sleep_threshold=30
+                    raw.functions.upload.GetFile(location=location, offset=offset_bytes, limit=chunk_size),
+                    sleep_threshold=30,
                 )
 
                 if isinstance(r, raw.types.upload.File):
@@ -915,11 +931,9 @@ class Client(Methods):
                         if progress:
                             func = functools.partial(
                                 progress,
-                                min(offset_bytes, file_size)
-                                if file_size != 0
-                                else offset_bytes,
+                                min(offset_bytes, file_size) if file_size != 0 else offset_bytes,
                                 file_size,
-                                *progress_args
+                                *progress_args,
                             )
 
                             if inspect.iscoroutinefunction(progress):
@@ -931,27 +945,24 @@ class Client(Methods):
                             break
 
                         r = await session.invoke(
-                            raw.functions.upload.GetFile(
-                                location=location,
-                                offset=offset_bytes,
-                                limit=chunk_size
-                            ),
-                            sleep_threshold=30
+                            raw.functions.upload.GetFile(location=location, offset=offset_bytes, limit=chunk_size),
+                            sleep_threshold=30,
                         )
                 elif isinstance(r, raw.types.upload.FileCdnRedirect):
                     auth_key = await Auth(
                         self,
                         r.dc_id,
                         await self.storage.test_mode(),
-                        connection_protocol_class=self.connection_protocol_class
+                        connection_protocol_class=self.connection_protocol_class,
                     ).create()
                     cdn_session = Session(
-                        self, r.dc_id,
+                        self,
+                        r.dc_id,
                         auth_key,
                         await self.storage.test_mode(),
                         is_media=True,
                         is_cdn=True,
-                        connection_protocol_class=self.connection_protocol_class
+                        connection_protocol_class=self.connection_protocol_class,
                     )
 
                     try:
@@ -962,7 +973,7 @@ class Client(Methods):
                                 raw.functions.upload.GetCdnFile(
                                     file_token=r.file_token,
                                     offset=offset_bytes,
-                                    limit=chunk_size
+                                    limit=chunk_size,
                                 )
                             )
 
@@ -971,7 +982,7 @@ class Client(Methods):
                                     await session.invoke(
                                         raw.functions.upload.ReuploadCdnFile(
                                             file_token=r.file_token,
-                                            request_token=r2.request_token
+                                            request_token=r2.request_token,
                                         )
                                     )
                                 except VolumeLocNotFound:
@@ -985,25 +996,19 @@ class Client(Methods):
                             decrypted_chunk = aes.ctr256_decrypt(
                                 chunk,
                                 r.encryption_key,
-                                bytearray(
-                                    r.encryption_iv[:-4]
-                                    + (offset_bytes // 16).to_bytes(4, "big")
-                                )
+                                bytearray(r.encryption_iv[:-4] + (offset_bytes // 16).to_bytes(4, "big")),
                             )
 
                             hashes = await session.invoke(
-                                raw.functions.upload.GetCdnFileHashes(
-                                    file_token=r.file_token,
-                                    offset=offset_bytes
-                                )
+                                raw.functions.upload.GetCdnFileHashes(file_token=r.file_token, offset=offset_bytes)
                             )
 
                             # https://core.telegram.org/cdn#verifying-files
                             for i, h in enumerate(hashes):
-                                cdn_chunk = decrypted_chunk[h.limit * i: h.limit * (i + 1)]
+                                cdn_chunk = decrypted_chunk[h.limit * i : h.limit * (i + 1)]
                                 CDNFileHashMismatch.check(
                                     h.hash == sha256(cdn_chunk).digest(),
-                                    "h.hash == sha256(cdn_chunk).digest()"
+                                    "h.hash == sha256(cdn_chunk).digest()",
                                 )
 
                             yield decrypted_chunk
@@ -1016,7 +1021,7 @@ class Client(Methods):
                                     progress,
                                     min(offset_bytes, file_size) if file_size != 0 else offset_bytes,
                                     file_size,
-                                    *progress_args
+                                    *progress_args,
                                 )
 
                                 if inspect.iscoroutinefunction(progress):
