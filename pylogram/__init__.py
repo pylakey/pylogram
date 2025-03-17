@@ -17,7 +17,7 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with Pylogram.  If not, see <http://www.gnu.org/licenses/>.
 
-__version__ = "0.11.4"
+__version__ = "0.11.5"
 __license__ = "GNU Lesser General Public License v3.0 (LGPL-3.0)"
 __copyright__ = "Copyright (C) 2017-2023 Dan <https://github.com/delivrance>, 2023-present Pylakey <https://github.com/pylakey>"
 

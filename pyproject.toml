@@ -1,3 +1,8 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+
 [project]
 name = "pylogram"
 description = "Elegant, modern and asynchronous Telegram MTProto API framework in Python for users and bots"
@@ -52,7 +57,3 @@ Homepage = "https://github.com/pylakey/pylogram"
 # Add your scripts here
 compile_api = "compiler.api.compiler:start"
 compile_errors = "compiler.errors.compiler:start"
-
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
