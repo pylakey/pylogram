@@ -24,4 +24,5 @@ exclude = [
 ]
 
 [build.targets.wheel]
+ignore-vcs = true
 package = "pylogram"

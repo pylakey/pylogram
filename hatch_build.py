@@ -1,4 +1,5 @@
 import sys
+from typing import Any
 
 from hatchling.builders.hooks.plugin.interface import BuildHookInterface
 
@@ -7,9 +8,9 @@ sys.path.insert(0, ".")
 
 
 class CustomHook(BuildHookInterface):
-    def initialize(self, version, build_data):
+    def initialize(self, version: str, build_data: dict[str, Any]) -> None:
         """Initialize the hook."""
-        if self.target_name in {"install"}:
+        if self.target_name not in {"wheel", "install"}:
             return
 
         from compiler.api.compiler import start as compile_api
