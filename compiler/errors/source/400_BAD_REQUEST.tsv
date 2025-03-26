@@ -131,7 +131,6 @@ FILE_REFERENCE_EMPTY	The file id contains an empty file reference, you must obta
 FILE_REFERENCE_EXPIRED	The file id contains an expired file reference, you must obtain a valid one by fetching the message from the origin context
 FILE_REFERENCE_INVALID	The file id contains an invalid file reference, you must obtain a valid one by fetching the message from the origin context
 FILTER_ID_INVALID	The specified filter ID is invalid
-FILTER_INCLUDE_EMPTY	The filter include is empty
 FIRSTNAME_INVALID	The first name is invalid
 FOLDER_ID_EMPTY	The folder you tried to delete was already empty
 FOLDER_ID_INVALID	The folder id is invalid
@@ -387,3 +386,9 @@ WEBDOCUMENT_URL_INVALID	The web document URL is invalid
 WEBPAGE_CURL_FAILED	Telegram server could not fetch the provided URL
 WEBPAGE_MEDIA_EMPTY	The URL doesn't contain any valid media
 YOU_BLOCKED_USER	You blocked this user
+INVITE_SLUG_EMPTY	The specified invite slug is empty.
+INVITE_SLUG_EXPIRED	The specified chat folder link has expired.
+FILTER_INCLUDE_EMPTY	The include_peers vector of the filter is empty.
+FILTER_INCLUDE_TOO_MUCH	Dialog filter includes too much chats
+FILTER_TITLE_EMPTY	The title field of the filter is empty.
+CHATLISTS_TOO_MUCH	Shareable chat lists limit reached
