@@ -13,7 +13,12 @@ def parse_raw_message(
     chats: dict,
 ) -> pylogram.types.Message:
     if isinstance(message, pylogram.raw.types.MessageEmpty):
-        return pylogram.types.Message(id=message.id, empty=True, client=client, raw_message=message)
+        return pylogram.types.Message(
+            id=message.id,
+            empty=True,
+            client=client,
+            _raw=message,
+        )
 
     from_peer_id = pylogram.utils.get_raw_peer_id(message.from_id)
     peer_id = pylogram.utils.get_raw_peer_id(message.peer_id)
@@ -38,11 +43,15 @@ def parse_raw_message(
         service_type = None
 
         if isinstance(action, pylogram.raw.types.MessageActionChatAddUser):
-            new_chat_members = [pylogram.types.User._parse(client, users[i]) for i in action.users]
+            new_chat_members = [
+                pylogram.types.User._parse(client, users[i]) for i in action.users
+            ]
             service_type = pylogram.enums.MessageServiceType.NEW_CHAT_MEMBERS
         elif isinstance(action, pylogram.raw.types.MessageActionChatJoinedByLink):
             new_chat_members = [
-                pylogram.types.User._parse(client, users[pylogram.utils.get_raw_peer_id(message.from_id)])
+                pylogram.types.User._parse(
+                    client, users[pylogram.utils.get_raw_peer_id(message.from_id)]
+                )
             ]
             service_type = pylogram.enums.MessageServiceType.NEW_CHAT_MEMBERS
         elif isinstance(action, pylogram.raw.types.MessageActionChatDeleteUser):
@@ -80,7 +89,9 @@ def parse_raw_message(
                 video_chat_started = pylogram.types.VideoChatStarted()
                 service_type = pylogram.enums.MessageServiceType.VIDEO_CHAT_STARTED
         elif isinstance(action, pylogram.raw.types.MessageActionInviteToGroupCall):
-            video_chat_members_invited = pylogram.types.VideoChatMembersInvited._parse(client, action, users)
+            video_chat_members_invited = pylogram.types.VideoChatMembersInvited._parse(
+                client, action, users
+            )
             service_type = pylogram.enums.MessageServiceType.VIDEO_CHAT_MEMBERS_INVITED
         elif isinstance(action, pylogram.raw.types.MessageActionWebViewDataSentMe):
             web_app_data = pylogram.types.WebAppData._parse(action)
@@ -89,7 +100,9 @@ def parse_raw_message(
         chat = pylogram.types.Chat._parse(client, message, users, chats, is_chat=True)
         from_user = pylogram.types.User._parse(client, users.get(user_id))
         sender_chat = (
-            pylogram.types.Chat._parse(client, message, users, chats, is_chat=False) if not from_user else None
+            pylogram.types.Chat._parse(client, message, users, chats, is_chat=False)
+            if not from_user
+            else None
         )
 
         parsed_message = pylogram.types.Message(
@@ -104,8 +117,12 @@ def parse_raw_message(
             new_chat_title=new_chat_title,
             new_chat_photo=new_chat_photo,
             delete_chat_photo=delete_chat_photo,
-            migrate_to_chat_id=pylogram.utils.get_channel_id(migrate_to_chat_id) if migrate_to_chat_id else None,
-            migrate_from_chat_id=-migrate_from_chat_id if migrate_from_chat_id else None,
+            migrate_to_chat_id=pylogram.utils.get_channel_id(migrate_to_chat_id)
+            if migrate_to_chat_id
+            else None,
+            migrate_from_chat_id=-migrate_from_chat_id
+            if migrate_from_chat_id
+            else None,
             group_chat_created=group_chat_created,
             channel_chat_created=channel_chat_created,
             video_chat_scheduled=video_chat_scheduled,
@@ -115,7 +132,7 @@ def parse_raw_message(
             web_app_data=web_app_data,
             client=client,
             reply_to=message.reply_to,
-            raw_message=message,
+            _raw=message,
             # TODO: supergroup_chat_created
         )
 
@@ -123,13 +140,20 @@ def parse_raw_message(
             parsed_message.service = pylogram.enums.MessageServiceType.PINNED_MESSAGE
         elif isinstance(action, pylogram.raw.types.MessageActionGameScore):
             parsed_message.service = pylogram.enums.MessageServiceType.GAME_HIGH_SCORE
-            parsed_message.game_high_score = pylogram.types.GameHighScore._parse_action(client, message, users)
+            parsed_message.game_high_score = pylogram.types.GameHighScore._parse_action(
+                client, message, users
+            )
 
-        client.message_cache[(parsed_message.chat.id, parsed_message.id)] = parsed_message
+        client.message_cache[(parsed_message.chat.id, parsed_message.id)] = (
+            parsed_message
+        )
 
         return parsed_message
     elif isinstance(message, pylogram.raw.types.Message):
-        entities = [pylogram.types.MessageEntity._parse(client, entity, users) for entity in message.entities]
+        entities = [
+            pylogram.types.MessageEntity._parse(client, entity, users)
+            for entity in message.entities
+        ]
         entities = pylogram.types.List(filter(lambda x: x is not None, entities))
 
         forward_from = None
@@ -149,9 +173,13 @@ def parse_raw_message(
                 peer_id = pylogram.utils.get_peer_id(forward_header.from_id)
 
                 if peer_id > 0:
-                    forward_from = pylogram.types.User._parse(client, users[raw_peer_id])
+                    forward_from = pylogram.types.User._parse(
+                        client, users[raw_peer_id]
+                    )
                 else:
-                    forward_from_chat = pylogram.types.Chat._parse_channel_chat(client, chats[raw_peer_id])
+                    forward_from_chat = pylogram.types.Chat._parse_channel_chat(
+                        client, chats[raw_peer_id]
+                    )
                     forward_from_message_id = forward_header.channel_post
                     forward_signature = forward_header.post_author
             elif forward_header.from_name:
@@ -179,7 +207,9 @@ def parse_raw_message(
 
         if media:
             if isinstance(media, pylogram.raw.types.MessageMediaPhoto):
-                photo = pylogram.types.Photo._parse(client, media.photo, media.ttl_seconds)
+                photo = pylogram.types.Photo._parse(
+                    client, media.photo, media.ttl_seconds
+                )
                 media_type = pylogram.enums.MessageMediaType.PHOTO
                 has_media_spoiler = media.spoiler
             elif isinstance(media, pylogram.raw.types.MessageMediaGeo):
@@ -201,24 +231,34 @@ def parse_raw_message(
                     attributes = {type(i): i for i in doc.attributes}
 
                     file_name = getattr(
-                        attributes.get(pylogram.raw.types.DocumentAttributeFilename, None),
+                        attributes.get(
+                            pylogram.raw.types.DocumentAttributeFilename, None
+                        ),
                         "file_name",
                         None,
                     )
 
                     if pylogram.raw.types.DocumentAttributeAnimated in attributes:
-                        video_attributes = attributes.get(pylogram.raw.types.DocumentAttributeVideo, None)
-                        animation = pylogram.types.Animation._parse(client, doc, video_attributes, file_name)
+                        video_attributes = attributes.get(
+                            pylogram.raw.types.DocumentAttributeVideo, None
+                        )
+                        animation = pylogram.types.Animation._parse(
+                            client, doc, video_attributes, file_name
+                        )
                         media_type = pylogram.enums.MessageMediaType.ANIMATION
                         has_media_spoiler = media.spoiler
                     elif pylogram.raw.types.DocumentAttributeSticker in attributes:
                         # sticker = await pylogram.types.Sticker._parse(client, doc, attributes)
                         media_type = pylogram.enums.MessageMediaType.STICKER
                     elif pylogram.raw.types.DocumentAttributeVideo in attributes:
-                        video_attributes = attributes[pylogram.raw.types.DocumentAttributeVideo]
+                        video_attributes = attributes[
+                            pylogram.raw.types.DocumentAttributeVideo
+                        ]
 
                         if video_attributes.round_message:
-                            video_note = pylogram.types.VideoNote._parse(client, doc, video_attributes)
+                            video_note = pylogram.types.VideoNote._parse(
+                                client, doc, video_attributes
+                            )
                             media_type = pylogram.enums.MessageMediaType.VIDEO_NOTE
                         else:
                             video = pylogram.types.Video._parse(
@@ -231,16 +271,24 @@ def parse_raw_message(
                             media_type = pylogram.enums.MessageMediaType.VIDEO
                             has_media_spoiler = media.spoiler
                     elif pylogram.raw.types.DocumentAttributeAudio in attributes:
-                        audio_attributes = attributes[pylogram.raw.types.DocumentAttributeAudio]
+                        audio_attributes = attributes[
+                            pylogram.raw.types.DocumentAttributeAudio
+                        ]
 
                         if audio_attributes.voice:
-                            voice = pylogram.types.Voice._parse(client, doc, audio_attributes)
+                            voice = pylogram.types.Voice._parse(
+                                client, doc, audio_attributes
+                            )
                             media_type = pylogram.enums.MessageMediaType.VOICE
                         else:
-                            audio = pylogram.types.Audio._parse(client, doc, audio_attributes, file_name)
+                            audio = pylogram.types.Audio._parse(
+                                client, doc, audio_attributes, file_name
+                            )
                             media_type = pylogram.enums.MessageMediaType.AUDIO
                     else:
-                        document = pylogram.types.Document._parse(client, doc, file_name)
+                        document = pylogram.types.Document._parse(
+                            client, doc, file_name
+                        )
                         media_type = pylogram.enums.MessageMediaType.DOCUMENT
             elif isinstance(media, pylogram.raw.types.MessageMediaWebPage):
                 if isinstance(media.webpage, pylogram.raw.types.WebPage):
@@ -273,7 +321,9 @@ def parse_raw_message(
 
         from_user = pylogram.types.User._parse(client, users.get(user_id))
         sender_chat = (
-            pylogram.types.Chat._parse(client, message, users, chats, is_chat=False) if not from_user else None
+            pylogram.types.Chat._parse(client, message, users, chats, is_chat=False)
+            if not from_user
+            else None
         )
 
         reactions = pylogram.types.MessageReactions._parse(client, message.reactions)
@@ -281,13 +331,27 @@ def parse_raw_message(
         parsed_message = pylogram.types.Message(
             id=message.id,
             date=pylogram.utils.timestamp_to_datetime(message.date),
-            chat=pylogram.types.Chat._parse(client, message, users, chats, is_chat=True),
+            chat=pylogram.types.Chat._parse(
+                client, message, users, chats, is_chat=True
+            ),
             from_user=from_user,
             sender_chat=sender_chat,
-            text=(Str(message.message).init(entities) or None if media is None or web_page is not None else None),
-            caption=(Str(message.message).init(entities) or None if media is not None and web_page is None else None),
-            entities=(entities or None if media is None or web_page is not None else None),
-            caption_entities=(entities or None if media is not None and web_page is None else None),
+            text=(
+                Str(message.message).init(entities) or None
+                if media is None or web_page is not None
+                else None
+            ),
+            caption=(
+                Str(message.message).init(entities) or None
+                if media is not None and web_page is None
+                else None
+            ),
+            entities=(
+                entities or None if media is None or web_page is not None else None
+            ),
+            caption_entities=(
+                entities or None if media is not None and web_page is None else None
+            ),
             author_signature=message.post_author,
             has_protected_content=message.noforwards,
             has_media_spoiler=has_media_spoiler,
@@ -325,7 +389,7 @@ def parse_raw_message(
             reactions=reactions,
             client=client,
             reply_to=message.reply_to,
-            raw_message=message,
+            _raw=message,
         )
 
         if isinstance(message.reply_to, pylogram.raw.types.MessageReplyHeader):
@@ -333,7 +397,9 @@ def parse_raw_message(
             parsed_message.reply_to_top_message_id = message.reply_to.reply_to_top_id
 
         if not parsed_message.poll:  # Do not cache poll messages
-            client.message_cache[(parsed_message.chat.id, parsed_message.id)] = parsed_message
+            client.message_cache[(parsed_message.chat.id, parsed_message.id)] = (
+                parsed_message
+            )
 
         return parsed_message
 
@@ -355,8 +421,13 @@ def parse_raw_dialog_chat(
 
     raw_chat = chats.get(dialog_raw_peer_id)
 
+    if dialog_raw_peer_id == 1825406697:
+        print(raw_chat)
+
     if not bool(raw_chat):
-        raise ValueError(f"Something is going wrong, chat {dialog_raw_peer_id} not found")
+        raise ValueError(
+            f"Something is going wrong, chat {dialog_raw_peer_id} not found"
+        )
 
     if isinstance(raw_chat, pylogram.raw.types.ChatEmpty):
         raise ValueError(f"Chat {dialog_raw_peer_id} is empty")
@@ -396,6 +467,8 @@ def parse_raw_dialogs(
     result: list[pylogram.types.Dialog] = []
 
     for dialog in dialogs:
+        dialog_peer_id = pylogram.utils.get_raw_peer_id(dialog.peer)
+
         if not bool(dialog.top_message):
             continue
 
@@ -412,13 +485,9 @@ def parse_raw_dialogs(
             logger.debug(f"Unable to parse dialog chat: {e}", exc_info=True)
             continue
 
-        raw_message = messages.get(pylogram.utils.get_dialog_message_key(dialog.peer, dialog.top_message))
-
-        if bool(raw_message):
-            top_message = parse_raw_message(client, raw_message, users, chats)
-        else:
-            top_message = None
-
+        top_message = parse_raw_message(
+            client, messages[(dialog_peer_id, dialog.top_message)], users, chats
+        )
         parsed_dialog = pylogram.types.Dialog(
             client=client,
             chat=chat,
@@ -427,7 +496,7 @@ def parse_raw_dialogs(
             unread_mentions_count=dialog.unread_mentions_count,
             unread_messages_count=dialog.unread_count,
             is_pinned=dialog.pinned,
-            raw_dialog=dialog,
+            _raw=dialog,
         )
         result.append(parsed_dialog)
 

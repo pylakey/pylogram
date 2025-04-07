@@ -353,11 +353,45 @@ class Client(Methods):
 
         return phone_number
 
-    async def fetch_phone_code(self) -> str:
+    async def fetch_phone_code(
+        self,
+        *,
+        sent_code: Optional[raw.types.auth.SentCode] = None,
+    ) -> str:
         phone_code = self.phone_code
 
         if not bool(phone_code):
-            phone_code = await ainput("Enter confirmation code: ")
+            if isinstance(sent_code, raw.types.auth.SentCode):
+                if isinstance(sent_code.type, raw.types.auth.SentCodeTypeApp):
+                    hint = "Enter confirmation code from the app: "
+                elif isinstance(sent_code.type, raw.types.auth.SentCodeTypeSms):
+                    hint = "Enter confirmation code from the SMS: "
+                elif isinstance(sent_code.type, raw.types.auth.SentCodeTypeCall):
+                    hint = "Enter confirmation code from the call: "
+                elif isinstance(sent_code.type, raw.types.auth.SentCodeTypeEmailCode):
+                    hint = f"Enter confirmation code from the email {sent_code.type.email_pattern}: "
+                elif isinstance(sent_code.type, raw.types.auth.SentCodeTypeFirebaseSms):
+                    hint = "Enter confirmation code from the Firebase SMS: "
+                elif isinstance(sent_code.type, raw.types.auth.SentCodeTypeFlashCall):
+                    hint = f"Enter confirmation code from the flash call {sent_code.type.pattern}: "
+                elif isinstance(sent_code.type, raw.types.auth.SentCodeTypeFragmentSms):
+                    hint = f"Enter confirmation code from the Fragment SMS {sent_code.type.url}: "
+                elif isinstance(sent_code.type, raw.types.auth.SentCodeTypeMissedCall):
+                    hint = "Enter confirmation code from the missed call: "
+                elif isinstance(
+                    sent_code.type, raw.types.auth.SentCodeTypeSetUpEmailRequired
+                ):
+                    raise RuntimeError(
+                        "Email is required to continue authorization process"
+                    )
+                elif isinstance(sent_code.type, raw.types.auth.SentCodeTypeSmsPhrase):
+                    hint = f"Enter confirmation code from the SMS phrase {sent_code.type.beginning}: "
+                elif isinstance(sent_code.type, raw.types.auth.SentCodeTypeSmsWord):
+                    hint = f"Enter confirmation code from the SMS word {sent_code.type.beginning}: "
+            else:
+                hint = f"Enter confirmation code (Unknown method - {sent_code.__class__.__name__}): "
+
+            phone_code = await ainput(hint)
 
         if not bool(phone_code):
             raise RuntimeError("The auth code required for signing in")
@@ -405,11 +439,13 @@ class Client(Methods):
         log.debug(
             f"The confirmation code for {phone_number} has been sent via {sent_code.description}"
         )
-        phone_code = await self.fetch_phone_code()
+        phone_code = await self.fetch_phone_code(sent_code=sent_code.get_raw())
 
         try:
             signed_in = await self.sign_in(
-                phone_number, sent_code.phone_code_hash, phone_code
+                phone_number,
+                sent_code.phone_code_hash,
+                phone_code,
             )
         except SessionPasswordNeeded as e:
             log.info(e.MESSAGE)

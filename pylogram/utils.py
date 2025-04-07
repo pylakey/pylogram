@@ -55,9 +55,7 @@ async def ainput(prompt: str = "", *, hide: bool = False) -> str:
 
 
 def get_input_media_from_file_id(
-    file_id: str,
-    expected_file_type: FileType = None,
-    ttl_seconds: int = None,
+    file_id: str, expected_file_type: FileType = None, ttl_seconds: int = None
 ) -> Union["raw.types.InputMediaPhoto", "raw.types.InputMediaDocument"]:
     try:
         decoded = FileId.decode(file_id)
@@ -70,7 +68,9 @@ def get_input_media_from_file_id(
     file_type = decoded.file_type
 
     if expected_file_type is not None and file_type != expected_file_type:
-        raise ValueError(f"Expected {expected_file_type.name}, got {file_type.name} file id instead")
+        raise ValueError(
+            f"Expected {expected_file_type.name}, got {file_type.name} file id instead"
+        )
 
     if file_type in (FileType.THUMBNAIL, FileType.CHAT_PHOTO):
         raise ValueError(f"This file id can only be used for download: {file_id}")
@@ -98,7 +98,9 @@ def get_input_media_from_file_id(
     raise ValueError(f"Unknown file id: {file_id}")
 
 
-async def parse_messages(client, messages: "raw.types.messages.Messages", replies: int = 1) -> List["types.Message"]:
+async def parse_messages(
+    client, messages: "raw.types.messages.Messages", replies: int = 1
+) -> List["types.Message"]:
     users = {i.id: i for i in messages.users}
     chats = {i.id: i for i in messages.chats}
 
@@ -108,13 +110,16 @@ async def parse_messages(client, messages: "raw.types.messages.Messages", replie
     parsed_messages = []
 
     for message in messages.messages:
-        parsed_messages.append(await types.Message._parse(client, message, users, chats, replies=0))
+        parsed_messages.append(
+            await types.Message._parse(client, message, users, chats, replies=0)
+        )
 
     if replies:
         messages_with_replies = {
             i.id: i.reply_to.reply_to_msg_id
             for i in messages.messages
-            if not isinstance(i, raw.types.MessageEmpty) and isinstance(i.reply_to, raw.types.MessageReplyHeader)
+            if not isinstance(i, raw.types.MessageEmpty)
+            and isinstance(i.reply_to, raw.types.MessageReplyHeader)
         }
 
         if messages_with_replies:
@@ -161,7 +166,7 @@ def parse_deleted_messages(client, update) -> List["types.Message"]:
                 if channel_id is not None
                 else None,
                 client=client,
-                raw_message=message,
+                _raw=message,
             )
         )
 
@@ -170,9 +175,13 @@ def parse_deleted_messages(client, update) -> List["types.Message"]:
 
 def pack_inline_message_id(msg_id: "raw.base.InputBotInlineMessageID"):
     if isinstance(msg_id, raw.types.InputBotInlineMessageID):
-        inline_message_id_packed = struct.pack("<iqq", msg_id.dc_id, msg_id.id, msg_id.access_hash)
+        inline_message_id_packed = struct.pack(
+            "<iqq", msg_id.dc_id, msg_id.id, msg_id.access_hash
+        )
     else:
-        inline_message_id_packed = struct.pack("<iqiq", msg_id.dc_id, msg_id.owner_id, msg_id.id, msg_id.access_hash)
+        inline_message_id_packed = struct.pack(
+            "<iqiq", msg_id.dc_id, msg_id.owner_id, msg_id.id, msg_id.access_hash
+        )
 
     return base64.urlsafe_b64encode(inline_message_id_packed).decode().rstrip("=")
 
@@ -186,7 +195,9 @@ def unpack_inline_message_id(
     if len(decoded) == 20:
         unpacked = struct.unpack("<iqq", decoded)
 
-        return raw.types.InputBotInlineMessageID(dc_id=unpacked[0], id=unpacked[1], access_hash=unpacked[2])
+        return raw.types.InputBotInlineMessageID(
+            dc_id=unpacked[0], id=unpacked[1], access_hash=unpacked[2]
+        )
     else:
         unpacked = struct.unpack("<iqiq", decoded)
 
@@ -217,20 +228,6 @@ def get_raw_peer_id(peer: raw.base.Peer) -> Optional[int]:
         return peer.channel_id
 
     return None
-
-
-def get_dialog_message_key(
-    peer: raw.base.Peer,
-    message_id: int,
-) -> tuple[int | None, int]:
-    if isinstance(peer, raw.types.PeerChannel):
-        return (peer.channel_id, message_id)
-    elif isinstance(peer, raw.types.PeerChat):
-        return (None, message_id)
-    elif isinstance(peer, raw.types.PeerUser):
-        return (None, message_id)
-    else:
-        raise ValueError(f"Invalid peer type: {peer}")
 
 
 def get_peer_id(peer: raw.base.Peer | raw.base.InputPeer) -> int:
@@ -295,7 +292,9 @@ def compute_password_hash(
 
 
 # noinspection PyPep8Naming
-def compute_password_check(r: raw.types.account.Password, password: str) -> raw.types.InputCheckPasswordSRP:
+def compute_password_check(
+    r: raw.types.account.Password, password: str
+) -> raw.types.InputCheckPasswordSRP:
     algo = r.current_algo
 
     p_bytes = algo.p
@@ -341,7 +340,12 @@ def compute_password_check(r: raw.types.account.Password, password: str) -> raw.
     K_bytes = sha256(S_bytes)
 
     M1_bytes = sha256(
-        xor(sha256(p_bytes), sha256(g_bytes)) + sha256(algo.salt1) + sha256(algo.salt2) + A_bytes + B_bytes + K_bytes
+        xor(sha256(p_bytes), sha256(g_bytes))
+        + sha256(algo.salt1)
+        + sha256(algo.salt2)
+        + A_bytes
+        + B_bytes
+        + K_bytes
     )
 
     return raw.types.InputCheckPasswordSRP(srp_id=srp_id, A=A_bytes, M1=M1_bytes)
@@ -417,12 +421,16 @@ def calculate_pagination_hash(numbers: List[int]) -> int:
         acc ^= acc >> 21
         acc ^= acc << 35
         acc ^= acc >> 4
-        acc = (acc + number) & 0xFFFFFFFFFFFFFFFF  # To let it not overflow a 64-bit integer
+        acc = (
+            acc + number
+        ) & 0xFFFFFFFFFFFFFFFF  # To let it not overflow a 64-bit integer
 
     return acc
 
 
-def is_tl_object_of_base_type(value: pylogram.raw.core.TLObject, base_type: Any | tuple[Any]) -> bool:
+def is_tl_object_of_base_type(
+    value: pylogram.raw.core.TLObject, base_type: Any | tuple[Any]
+) -> bool:
     if isinstance(base_type, tuple):
         return any(is_tl_object_of_base_type(value, t) for t in base_type)
 
@@ -469,7 +477,9 @@ def chat_list_invite_link_to_slug(link: str) -> str:
 
 def telegram_json_to_python_obj(data: raw.base.JSONValue) -> Any:
     if isinstance(data, raw.types.JsonObject):
-        return {item.key: telegram_json_to_python_obj(item.value) for item in data.value}
+        return {
+            item.key: telegram_json_to_python_obj(item.value) for item in data.value
+        }
 
     if isinstance(data, list):
         return [telegram_json_to_python_obj(item) for item in data]
@@ -480,7 +490,9 @@ def telegram_json_to_python_obj(data: raw.base.JSONValue) -> Any:
     if isinstance(data, raw.types.JsonNull):
         return None
 
-    if isinstance(data, (raw.types.JsonBool, raw.types.JsonNumber, raw.types.JsonString)):
+    if isinstance(
+        data, (raw.types.JsonBool, raw.types.JsonNumber, raw.types.JsonString)
+    ):
         return data.value
 
     raise ValueError(f"Unknown JSON object type: {data}")
@@ -515,7 +527,10 @@ def get_input_peer_from_peer(
         chat = chats.get(peer.chat_id)
 
         if allowed_only and (
-            not chat or isinstance(chat, (pylogram.raw.types.ChatForbidden, pylogram.raw.types.ChatEmpty))
+            not chat
+            or isinstance(
+                chat, (pylogram.raw.types.ChatForbidden, pylogram.raw.types.ChatEmpty)
+            )
         ):
             return None
 

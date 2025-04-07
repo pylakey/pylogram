@@ -18,8 +18,8 @@
 #  along with Pylogram.  If not, see <http://www.gnu.org/licenses/>.
 import typing
 
-from pylogram import enums
-from pylogram import raw
+from pylogram import enums, raw
+
 from ..object import Object
 
 sent_code_descriptions = {
@@ -34,7 +34,7 @@ sent_code_descriptions = {
 }
 
 
-class SentCode(Object):
+class SentCode(Object[raw.types.auth.SentCode]):
     """Contains info on a sent confirmation code.
 
     Parameters:
@@ -53,13 +53,15 @@ class SentCode(Object):
     """
 
     def __init__(
-            self, *,
-            type: "enums.SentCodeType",
-            phone_code_hash: str,
-            next_type: "enums.NextCodeType" = None,
-            timeout: int = None
+        self,
+        *,
+        type: "enums.SentCodeType",
+        phone_code_hash: str,
+        next_type: "enums.NextCodeType" = None,
+        timeout: int = None,
+        _raw: raw.types.auth.SentCode = None,
     ):
-        super().__init__()
+        super().__init__(_raw=_raw)
 
         self.type = type
         self.phone_code_hash = phone_code_hash
@@ -71,8 +73,11 @@ class SentCode(Object):
         return SentCode(
             type=enums.SentCodeType(type(sent_code.type)),
             phone_code_hash=sent_code.phone_code_hash,
-            next_type=enums.NextCodeType(type(sent_code.next_type)) if sent_code.next_type else None,
-            timeout=sent_code.timeout
+            next_type=enums.NextCodeType(type(sent_code.next_type))
+            if sent_code.next_type
+            else None,
+            timeout=sent_code.timeout,
+            _raw=sent_code,
         )
 
     @property

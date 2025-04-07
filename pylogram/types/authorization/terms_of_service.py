@@ -19,12 +19,12 @@
 
 from typing import List
 
-from pylogram import raw
-from pylogram import types
+from pylogram import raw, types
+
 from ..object import Object
 
 
-class TermsOfService(Object):
+class TermsOfService(Object[raw.types.help.TermsOfService]):
     """Telegram's Terms of Service returned by :meth:`~pylogram.Client.sign_in`.
 
     Parameters:
@@ -38,8 +38,15 @@ class TermsOfService(Object):
             Special entities like URLs that appear in the text.
     """
 
-    def __init__(self, *, id: str, text: str, entities: List["types.MessageEntity"]):
-        super().__init__()
+    def __init__(
+        self,
+        *,
+        id: str,
+        text: str,
+        entities: List["types.MessageEntity"],
+        _raw: raw.types.help.TermsOfService = None,
+    ):
+        super().__init__(_raw=_raw)
 
         self.id = id
         self.text = text
@@ -53,5 +60,8 @@ class TermsOfService(Object):
             entities=[
                 types.MessageEntity._parse(None, entity, {})
                 for entity in terms_of_service.entities
-            ] if terms_of_service.entities else None
+            ]
+            if terms_of_service.entities
+            else None,
+            _raw=terms_of_service,
         )

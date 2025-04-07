@@ -18,6 +18,7 @@
 #  along with Pylogram.  If not, see <http://www.gnu.org/licenses/>.
 
 from pylogram import raw
+
 from .auto_name import AutoName
 
 
@@ -30,8 +31,20 @@ class SentCodeType(AutoName):
     CALL = raw.types.auth.SentCodeTypeCall
     "The code will be sent via a phone call. A synthesized voice will tell the user which verification code to input."
 
+    EMAIL_CODE = raw.types.auth.SentCodeTypeEmailCode
+    "The code was sent via email."
+
+    EMAIL = raw.types.auth.SentCodeTypeEmailCode
+    "The code was sent via EMAIL."
+
+    FIREBASE_SMS = raw.types.auth.SentCodeTypeFirebaseSms
+    "The code was sent via Firebase SMS."
+
     FLASH_CALL = raw.types.auth.SentCodeTypeFlashCall
     "The code will be sent via a flash phone call, that will be closed immediately."
+
+    FRAGMENT_SMS = raw.types.auth.SentCodeTypeFragmentSms
+    "The code was sent via Fragment SMS."
 
     MISSED_CALL = raw.types.auth.SentCodeTypeMissedCall
     "Missed call."
@@ -39,14 +52,11 @@ class SentCodeType(AutoName):
     SMS = raw.types.auth.SentCodeTypeSms
     "The code was sent via SMS."
 
-    FRAGMENT_SMS = raw.types.auth.SentCodeTypeFragmentSms
-    "The code was sent via Fragment SMS."
-
-    EMAIL_CODE = raw.types.auth.SentCodeTypeEmailCode
-    "The code was sent via email."
-
     SETUP_EMAIL_REQUIRED = raw.types.auth.SentCodeTypeSetUpEmailRequired
     "Email setup required to protect account"
 
-    EMAIL = raw.types.auth.SentCodeTypeEmailCode
-    "The code was sent via EMAIL."
+    SMS_PHRASE = raw.types.auth.SentCodeTypeSmsPhrase
+    "The code was sent via SMS with a phrase."
+
+    SMS_WORD = raw.types.auth.SentCodeTypeSmsWord
+    "The code was sent via SMS with a word."
