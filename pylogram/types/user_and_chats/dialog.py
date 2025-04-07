@@ -18,13 +18,13 @@
 #  along with Pylogram.  If not, see <http://www.gnu.org/licenses/>.
 
 import pylogram
-from pylogram import raw
-from pylogram import types
-from ..object import Object
+from pylogram import raw, types
+
 from ... import utils
+from ..object import Object
 
 
-class Dialog(Object):
+class Dialog(Object[raw.base.Dialog]):
     """A user's dialog.
 
     Parameters:
@@ -57,9 +57,9 @@ class Dialog(Object):
         unread_mentions_count: int,
         unread_mark: bool,
         is_pinned: bool,
-        raw_dialog: "raw.base.Dialog" = None
+        _raw: "raw.base.Dialog" = None,
     ):
-        super().__init__(client)
+        super().__init__(client, _raw=_raw)
 
         self.chat = chat
         self.top_message = top_message
@@ -67,10 +67,6 @@ class Dialog(Object):
         self.unread_mentions_count = unread_mentions_count
         self.unread_mark = unread_mark
         self.is_pinned = is_pinned
-        self._raw = raw_dialog
-
-    def get_raw(self) -> "raw.base.Dialog":
-        return self._raw
 
     @staticmethod
     def _parse(client, dialog: "raw.types.Dialog", messages, users, chats) -> "Dialog":
@@ -82,5 +78,5 @@ class Dialog(Object):
             unread_mark=dialog.unread_mark,
             is_pinned=dialog.pinned,
             client=client,
-            raw_dialog=dialog
+            _raw=dialog,
         )

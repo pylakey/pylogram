@@ -24,10 +24,18 @@ from json import dumps
 
 import pylogram
 
+RawType = typing.TypeVar("RawType", bound=pylogram.raw.core.TLObject, covariant=True)
 
-class Object:
-    def __init__(self, client: "pylogram.Client" = None):
+
+class Object(typing.Generic[RawType]):
+    def __init__(
+        self,
+        client: "pylogram.Client" = None,
+        *,
+        _raw: RawType = None,
+    ):
         self._client = client
+        self._raw = _raw
 
     def bind(self, client: "pylogram.Client"):
         """Bind a Client instance to this and to all nested Pylogram objects.
@@ -67,10 +75,10 @@ class Object:
                 attr: getattr(obj, attr)
                 for attr in filter(
                     lambda x: not x.startswith("_"),
-                    getattr(obj, '__dict__', getattr(obj, '__slots__', {})) or {}
+                    getattr(obj, "__dict__", getattr(obj, "__slots__", {})) or {},
                 )
                 if getattr(obj, attr) is not None
-            }
+            },
         }
 
     def __str__(self) -> str:
@@ -83,7 +91,7 @@ class Object:
                 f"{attr}={repr(getattr(self, attr))}"
                 for attr in filter(lambda x: not x.startswith("_"), self.__dict__)
                 if getattr(self, attr) is not None
-            )
+            ),
         )
 
     def __eq__(self, other: "Object") -> bool:
@@ -120,3 +128,6 @@ class Object:
                 state[attr] = ("dt", obj.timestamp())
 
         return state
+
+    def get_raw(self) -> typing.Optional[RawType]:
+        return self._raw
