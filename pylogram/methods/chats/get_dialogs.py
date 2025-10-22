@@ -19,14 +19,13 @@
 
 import pylogram
 import pylogram.peers
-from pylogram import constants
-from pylogram import raw
-from pylogram import raw_parsers
-from pylogram import utils
+from pylogram import constants, raw, raw_parsers, utils
 
 
 class LoadAllDialogs:
-    async def load_all_dialogs(self: "pylogram.Client", sleep_threshold: int = 60) -> list[pylogram.types.Dialog]:
+    async def load_all_dialogs(
+        self: "pylogram.Client", sleep_threshold: int = 60
+    ) -> list[pylogram.types.Dialog]:
         async with self.dialogs_lock:
             raw_dialogs = []
             already_loaded_peers_ids: set[int] = set()
@@ -60,14 +59,15 @@ class LoadAllDialogs:
                     break
 
                 for d in r.dialogs:
-                    if (peer_id := utils.get_peer_id(d.peer)) not in already_loaded_peers_ids:
+                    if (
+                        peer_id := utils.get_peer_id(d.peer)
+                    ) not in already_loaded_peers_ids:
                         already_loaded_peers_ids.add(peer_id)
                         raw_dialogs.append(d)
 
-                messages.update({
-                    (utils.get_raw_peer_id(m.peer_id), m.id): m
-                    for m in r.messages
-                })
+                messages.update(
+                    {(utils.get_raw_peer_id(m.peer_id), m.id): m for m in r.messages}
+                )
                 users.update({u.id: u for u in r.users})
                 chats.update({c.id: c for c in r.chats})
 
@@ -79,13 +79,25 @@ class LoadAllDialogs:
 
                 for d in reversed(r.dialogs):
                     if d.top_message:
-                        d_top_message = messages.get((utils.get_raw_peer_id(d.peer), d.top_message))
+                        d_top_message = messages.get(
+                            (utils.get_raw_peer_id(d.peer), d.top_message)
+                        )
 
                         if bool(d_top_message):
-                            offset_peer = pylogram.peers.get_dialog_input_peer(d, users=r.users, chats=r.chats)
+                            offset_peer = pylogram.peers.get_dialog_input_peer(
+                                d, users=r.users, chats=r.chats
+                            )
                             offset_id = d_top_message.id
-                            offset_date = d_top_message.date
+
+                            if isinstance(
+                                d_top_message,
+                                (raw.types.MessageService, raw.types.Message),
+                            ):
+                                offset_date = d_top_message.date
+
                             break
 
-            self.dialogs = raw_parsers.parse_raw_dialogs(self, raw_dialogs, messages, users, chats)
+            self.dialogs = raw_parsers.parse_raw_dialogs(
+                self, raw_dialogs, messages, users, chats
+            )
             return self.dialogs
