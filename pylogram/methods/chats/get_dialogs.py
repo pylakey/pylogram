@@ -94,6 +94,8 @@ class LoadAllDialogs:
                                 (raw.types.MessageService, raw.types.Message),
                             ):
                                 offset_date = d_top_message.date
+                            elif isinstance(d_top_message, raw.types.MessageEmpty):
+                                continue
 
                             break
 
