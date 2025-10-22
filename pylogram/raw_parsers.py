@@ -7,18 +7,13 @@ logger = logging.getLogger(__name__)
 
 
 def parse_raw_message(
-        client: "pylogram.Client",
-        message: pylogram.raw.base.Message,
-        users: dict,
-        chats: dict
+    client: "pylogram.Client",
+    message: pylogram.raw.base.Message,
+    users: dict,
+    chats: dict,
 ) -> pylogram.types.Message:
     if isinstance(message, pylogram.raw.types.MessageEmpty):
-        return pylogram.types.Message(
-            id=message.id,
-            empty=True,
-            client=client,
-            raw_message=message
-        )
+        return pylogram.types.Message(id=message.id, empty=True, client=client, raw_message=message)
 
     from_peer_id = pylogram.utils.get_raw_peer_id(message.from_id)
     peer_id = pylogram.utils.get_raw_peer_id(message.peer_id)
@@ -47,7 +42,8 @@ def parse_raw_message(
             service_type = pylogram.enums.MessageServiceType.NEW_CHAT_MEMBERS
         elif isinstance(action, pylogram.raw.types.MessageActionChatJoinedByLink):
             new_chat_members = [
-                pylogram.types.User._parse(client, users[pylogram.utils.get_raw_peer_id(message.from_id)])]
+                pylogram.types.User._parse(client, users[pylogram.utils.get_raw_peer_id(message.from_id)])
+            ]
             service_type = pylogram.enums.MessageServiceType.NEW_CHAT_MEMBERS
         elif isinstance(action, pylogram.raw.types.MessageActionChatDeleteUser):
             left_chat_member = pylogram.types.User._parse(client, users[action.user_id])
@@ -93,9 +89,7 @@ def parse_raw_message(
         chat = pylogram.types.Chat._parse(client, message, users, chats, is_chat=True)
         from_user = pylogram.types.User._parse(client, users.get(user_id))
         sender_chat = (
-            pylogram.types.Chat._parse(client, message, users, chats, is_chat=False)
-            if not from_user
-            else None
+            pylogram.types.Chat._parse(client, message, users, chats, is_chat=False) if not from_user else None
         )
 
         parsed_message = pylogram.types.Message(
@@ -121,7 +115,7 @@ def parse_raw_message(
             web_app_data=web_app_data,
             client=client,
             reply_to=message.reply_to,
-            raw_message=message
+            raw_message=message,
             # TODO: supergroup_chat_created
         )
 
@@ -207,9 +201,9 @@ def parse_raw_message(
                     attributes = {type(i): i for i in doc.attributes}
 
                     file_name = getattr(
-                        attributes.get(
-                            pylogram.raw.types.DocumentAttributeFilename, None
-                        ), "file_name", None
+                        attributes.get(pylogram.raw.types.DocumentAttributeFilename, None),
+                        "file_name",
+                        None,
                     )
 
                     if pylogram.raw.types.DocumentAttributeAnimated in attributes:
@@ -227,8 +221,13 @@ def parse_raw_message(
                             video_note = pylogram.types.VideoNote._parse(client, doc, video_attributes)
                             media_type = pylogram.enums.MessageMediaType.VIDEO_NOTE
                         else:
-                            video = pylogram.types.Video._parse(client, doc, video_attributes, file_name,
-                                                                media.ttl_seconds)
+                            video = pylogram.types.Video._parse(
+                                client,
+                                doc,
+                                video_attributes,
+                                file_name,
+                                media.ttl_seconds,
+                            )
                             media_type = pylogram.enums.MessageMediaType.VIDEO
                             has_media_spoiler = media.spoiler
                     elif pylogram.raw.types.DocumentAttributeAudio in attributes:
@@ -274,9 +273,7 @@ def parse_raw_message(
 
         from_user = pylogram.types.User._parse(client, users.get(user_id))
         sender_chat = (
-            pylogram.types.Chat._parse(client, message, users, chats, is_chat=False)
-            if not from_user
-            else None
+            pylogram.types.Chat._parse(client, message, users, chats, is_chat=False) if not from_user else None
         )
 
         reactions = pylogram.types.MessageReactions._parse(client, message.reactions)
@@ -287,26 +284,10 @@ def parse_raw_message(
             chat=pylogram.types.Chat._parse(client, message, users, chats, is_chat=True),
             from_user=from_user,
             sender_chat=sender_chat,
-            text=(
-                Str(message.message).init(entities) or None
-                if media is None or web_page is not None
-                else None
-            ),
-            caption=(
-                Str(message.message).init(entities) or None
-                if media is not None and web_page is None
-                else None
-            ),
-            entities=(
-                entities or None
-                if media is None or web_page is not None
-                else None
-            ),
-            caption_entities=(
-                entities or None
-                if media is not None and web_page is None
-                else None
-            ),
+            text=(Str(message.message).init(entities) or None if media is None or web_page is not None else None),
+            caption=(Str(message.message).init(entities) or None if media is not None and web_page is None else None),
+            entities=(entities or None if media is None or web_page is not None else None),
+            caption_entities=(entities or None if media is not None and web_page is None else None),
             author_signature=message.post_author,
             has_protected_content=message.noforwards,
             has_media_spoiler=has_media_spoiler,
@@ -344,7 +325,7 @@ def parse_raw_message(
             reactions=reactions,
             client=client,
             reply_to=message.reply_to,
-            raw_message=message
+            raw_message=message,
         )
 
         if isinstance(message.reply_to, pylogram.raw.types.MessageReplyHeader):
@@ -358,13 +339,13 @@ def parse_raw_message(
 
 
 def parse_raw_dialog_chat(
-        client: "pylogram.Client",
-        dialog: pylogram.raw.base.Dialog,
-        users: dict[int, pylogram.raw.base.User],
-        chats: dict[int, pylogram.raw.base.Chat],
-        *,
-        raise_if_left: bool = True,
-        raise_if_migrated: bool = True,
+    client: "pylogram.Client",
+    dialog: pylogram.raw.base.Dialog,
+    users: dict[int, pylogram.raw.base.User],
+    chats: dict[int, pylogram.raw.base.Chat],
+    *,
+    raise_if_left: bool = True,
+    raise_if_migrated: bool = True,
 ) -> pylogram.types.Chat:
     dialog_raw_peer_id = pylogram.utils.get_raw_peer_id(dialog.peer)
 
@@ -374,16 +355,16 @@ def parse_raw_dialog_chat(
 
     raw_chat = chats.get(dialog_raw_peer_id)
 
-    if dialog_raw_peer_id == 1825406697:
-        print(raw_chat)
-
     if not bool(raw_chat):
         raise ValueError(f"Something is going wrong, chat {dialog_raw_peer_id} not found")
 
     if isinstance(raw_chat, pylogram.raw.types.ChatEmpty):
         raise ValueError(f"Chat {dialog_raw_peer_id} is empty")
 
-    if isinstance(raw_chat, (pylogram.raw.types.ChatForbidden, pylogram.raw.types.ChannelForbidden)):
+    if isinstance(
+        raw_chat,
+        (pylogram.raw.types.ChatForbidden, pylogram.raw.types.ChannelForbidden),
+    ):
         raise ValueError(f"Chat {dialog_raw_peer_id} is forbidden")
 
     if raise_if_left and raw_chat.left:
@@ -403,20 +384,18 @@ def parse_raw_dialog_chat(
 
 
 def parse_raw_dialogs(
-        client: "pylogram.Client",
-        dialogs: list[pylogram.raw.base.Dialog],
-        messages: dict[tuple[int, int], pylogram.raw.base.Message],
-        users: dict[int, pylogram.raw.base.User],
-        chats: dict[int, pylogram.raw.base.Chat],
-        *,
-        ignore_left: bool = True,
-        ignore_migrated: bool = True,
+    client: "pylogram.Client",
+    dialogs: list[pylogram.raw.base.Dialog],
+    messages: dict[tuple[int, int], pylogram.raw.base.Message],
+    users: dict[int, pylogram.raw.base.User],
+    chats: dict[int, pylogram.raw.base.Chat],
+    *,
+    ignore_left: bool = True,
+    ignore_migrated: bool = True,
 ) -> list[pylogram.types.Dialog]:
     result: list[pylogram.types.Dialog] = []
 
     for dialog in dialogs:
-        dialog_peer_id = pylogram.utils.get_raw_peer_id(dialog.peer)
-
         if not bool(dialog.top_message):
             continue
 
@@ -427,13 +406,19 @@ def parse_raw_dialogs(
                 users,
                 chats,
                 raise_if_left=ignore_left,
-                raise_if_migrated=ignore_migrated
+                raise_if_migrated=ignore_migrated,
             )
         except ValueError as e:
-            logger.debug(f'Unable to parse dialog chat: {e}', exc_info=True)
+            logger.debug(f"Unable to parse dialog chat: {e}", exc_info=True)
             continue
 
-        top_message = parse_raw_message(client, messages[(dialog_peer_id, dialog.top_message)], users, chats)
+        raw_message = messages.get(pylogram.utils.get_dialog_message_key(dialog.peer, dialog.top_message))
+
+        if bool(raw_message):
+            top_message = parse_raw_message(client, raw_message, users, chats)
+        else:
+            top_message = None
+
         parsed_dialog = pylogram.types.Dialog(
             client=client,
             chat=chat,
@@ -442,7 +427,7 @@ def parse_raw_dialogs(
             unread_mentions_count=dialog.unread_mentions_count,
             unread_messages_count=dialog.unread_count,
             is_pinned=dialog.pinned,
-            raw_dialog=dialog
+            raw_dialog=dialog,
         )
         result.append(parsed_dialog)
 

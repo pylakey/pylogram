@@ -28,23 +28,13 @@ import struct
 import sys
 import time
 import typing
-from datetime import datetime
-from datetime import timezone
+from datetime import datetime, timezone
 from getpass import getpass
-from typing import Any
-from typing import Dict
-from typing import List
-from typing import Optional
-from typing import Union
+from typing import Any, Dict, List, Optional, Union
 
 import pylogram
-from pylogram import enums
-from pylogram import raw
-from pylogram import types
-from pylogram.file_id import DOCUMENT_TYPES
-from pylogram.file_id import FileId
-from pylogram.file_id import FileType
-from pylogram.file_id import PHOTO_TYPES
+from pylogram import enums, raw, types
+from pylogram.file_id import DOCUMENT_TYPES, PHOTO_TYPES, FileId, FileType
 
 
 def _read_input(prompt: str = "") -> str:
@@ -65,9 +55,9 @@ async def ainput(prompt: str = "", *, hide: bool = False) -> str:
 
 
 def get_input_media_from_file_id(
-        file_id: str,
-        expected_file_type: FileType = None,
-        ttl_seconds: int = None
+    file_id: str,
+    expected_file_type: FileType = None,
+    ttl_seconds: int = None,
 ) -> Union["raw.types.InputMediaPhoto", "raw.types.InputMediaDocument"]:
     try:
         decoded = FileId.decode(file_id)
@@ -90,9 +80,9 @@ def get_input_media_from_file_id(
             id=raw.types.InputPhoto(
                 id=decoded.media_id,
                 access_hash=decoded.access_hash,
-                file_reference=decoded.file_reference
+                file_reference=decoded.file_reference,
             ),
-            ttl_seconds=ttl_seconds
+            ttl_seconds=ttl_seconds,
         )
 
     if file_type in DOCUMENT_TYPES:
@@ -100,19 +90,15 @@ def get_input_media_from_file_id(
             id=raw.types.InputDocument(
                 id=decoded.media_id,
                 access_hash=decoded.access_hash,
-                file_reference=decoded.file_reference
+                file_reference=decoded.file_reference,
             ),
-            ttl_seconds=ttl_seconds
+            ttl_seconds=ttl_seconds,
         )
 
     raise ValueError(f"Unknown file id: {file_id}")
 
 
-async def parse_messages(
-        client,
-        messages: "raw.types.messages.Messages",
-        replies: int = 1
-) -> List["types.Message"]:
+async def parse_messages(client, messages: "raw.types.messages.Messages", replies: int = 1) -> List["types.Message"]:
     users = {i.id: i for i in messages.users}
     chats = {i.id: i for i in messages.chats}
 
@@ -144,7 +130,7 @@ async def parse_messages(
             reply_messages = await client.get_messages(
                 chat_id,
                 reply_to_message_ids=messages_with_replies.keys(),
-                replies=replies - 1
+                replies=replies - 1,
             )
 
             for message in parsed_messages:
@@ -170,10 +156,12 @@ def parse_deleted_messages(client, update) -> List["types.Message"]:
                 chat=types.Chat(
                     id=get_channel_id(channel_id),
                     type=enums.ChatType.CHANNEL,
-                    client=client
-                ) if channel_id is not None else None,
+                    client=client,
+                )
+                if channel_id is not None
+                else None,
                 client=client,
-                raw_message=message
+                raw_message=message,
             )
         )
 
@@ -182,36 +170,23 @@ def parse_deleted_messages(client, update) -> List["types.Message"]:
 
 def pack_inline_message_id(msg_id: "raw.base.InputBotInlineMessageID"):
     if isinstance(msg_id, raw.types.InputBotInlineMessageID):
-        inline_message_id_packed = struct.pack(
-            "<iqq",
-            msg_id.dc_id,
-            msg_id.id,
-            msg_id.access_hash
-        )
+        inline_message_id_packed = struct.pack("<iqq", msg_id.dc_id, msg_id.id, msg_id.access_hash)
     else:
-        inline_message_id_packed = struct.pack(
-            "<iqiq",
-            msg_id.dc_id,
-            msg_id.owner_id,
-            msg_id.id,
-            msg_id.access_hash
-        )
+        inline_message_id_packed = struct.pack("<iqiq", msg_id.dc_id, msg_id.owner_id, msg_id.id, msg_id.access_hash)
 
     return base64.urlsafe_b64encode(inline_message_id_packed).decode().rstrip("=")
 
 
-def unpack_inline_message_id(inline_message_id: str) -> "raw.base.InputBotInlineMessageID":
+def unpack_inline_message_id(
+    inline_message_id: str,
+) -> "raw.base.InputBotInlineMessageID":
     padded = inline_message_id + "=" * (-len(inline_message_id) % 4)
     decoded = base64.urlsafe_b64decode(padded)
 
     if len(decoded) == 20:
         unpacked = struct.unpack("<iqq", decoded)
 
-        return raw.types.InputBotInlineMessageID(
-            dc_id=unpacked[0],
-            id=unpacked[1],
-            access_hash=unpacked[2]
-        )
+        return raw.types.InputBotInlineMessageID(dc_id=unpacked[0], id=unpacked[1], access_hash=unpacked[2])
     else:
         unpacked = struct.unpack("<iqiq", decoded)
 
@@ -219,7 +194,7 @@ def unpack_inline_message_id(inline_message_id: str) -> "raw.base.InputBotInline
             dc_id=unpacked[0],
             owner_id=unpacked[1],
             id=unpacked[2],
-            access_hash=unpacked[3]
+            access_hash=unpacked[3],
         )
 
 
@@ -242,6 +217,20 @@ def get_raw_peer_id(peer: raw.base.Peer) -> Optional[int]:
         return peer.channel_id
 
     return None
+
+
+def get_dialog_message_key(
+    peer: raw.base.Peer,
+    message_id: int,
+) -> tuple[int | None, int]:
+    if isinstance(peer, raw.types.PeerChannel):
+        return (peer.channel_id, message_id)
+    elif isinstance(peer, raw.types.PeerChat):
+        return (None, message_id)
+    elif isinstance(peer, raw.types.PeerUser):
+        return (None, message_id)
+    else:
+        raise ValueError(f"Invalid peer type: {peer}")
 
 
 def get_peer_id(peer: raw.base.Peer | raw.base.InputPeer) -> int:
@@ -295,8 +284,8 @@ def xor(a: bytes, b: bytes) -> bytes:
 
 
 def compute_password_hash(
-        algo: raw.types.PasswordKdfAlgoSHA256SHA256PBKDF2HMACSHA512iter100000SHA256ModPow,
-        password: str
+    algo: raw.types.PasswordKdfAlgoSHA256SHA256PBKDF2HMACSHA512iter100000SHA256ModPow,
+    password: str,
 ) -> bytes:
     hash1 = sha256(algo.salt1 + password.encode() + algo.salt1)
     hash2 = sha256(algo.salt2 + hash1 + algo.salt2)
@@ -306,10 +295,7 @@ def compute_password_hash(
 
 
 # noinspection PyPep8Naming
-def compute_password_check(
-        r: raw.types.account.Password,
-        password: str
-) -> raw.types.InputCheckPasswordSRP:
+def compute_password_check(r: raw.types.account.Password, password: str) -> raw.types.InputCheckPasswordSRP:
     algo = r.current_algo
 
     p_bytes = algo.p
@@ -355,22 +341,17 @@ def compute_password_check(
     K_bytes = sha256(S_bytes)
 
     M1_bytes = sha256(
-        xor(sha256(p_bytes), sha256(g_bytes))
-        + sha256(algo.salt1)
-        + sha256(algo.salt2)
-        + A_bytes
-        + B_bytes
-        + K_bytes
+        xor(sha256(p_bytes), sha256(g_bytes)) + sha256(algo.salt1) + sha256(algo.salt2) + A_bytes + B_bytes + K_bytes
     )
 
     return raw.types.InputCheckPasswordSRP(srp_id=srp_id, A=A_bytes, M1=M1_bytes)
 
 
 async def parse_text_entities(
-        client: "pylogram.Client",
-        text: str,
-        parse_mode: enums.ParseMode,
-        entities: List["types.MessageEntity"]
+    client: "pylogram.Client",
+    text: str,
+    parse_mode: enums.ParseMode,
+    entities: List["types.MessageEntity"],
 ) -> Dict[str, Union[str, List[raw.base.MessageEntity]]]:
     if entities:
         # Inject the client instance because parsing user mentions requires it
@@ -381,10 +362,7 @@ async def parse_text_entities(
     else:
         text, entities = (await client.parser.parse(text, parse_mode)).values()
 
-    return {
-        "message": text,
-        "entities": entities
-    }
+    return {"message": text, "entities": entities}
 
 
 def zero_datetime() -> datetime:
@@ -439,7 +417,7 @@ def calculate_pagination_hash(numbers: List[int]) -> int:
         acc ^= acc >> 21
         acc ^= acc << 35
         acc ^= acc >> 4
-        acc = (acc + number) & 0xffffffffffffffff  # To let it not overflow a 64-bit integer
+        acc = (acc + number) & 0xFFFFFFFFFFFFFFFF  # To let it not overflow a 64-bit integer
 
     return acc
 
@@ -486,7 +464,7 @@ def slug_to_chat_list_invite_link(slug: str) -> str:
 
 
 def chat_list_invite_link_to_slug(link: str) -> str:
-    return link.replace(CHAT_LIST_INVITE_LINK_PREFIX, '')
+    return link.replace(CHAT_LIST_INVITE_LINK_PREFIX, "")
 
 
 def telegram_json_to_python_obj(data: raw.base.JSONValue) -> Any:
@@ -509,11 +487,11 @@ def telegram_json_to_python_obj(data: raw.base.JSONValue) -> Any:
 
 
 def get_input_peer_from_peer(
-        peer: pylogram.raw.base.Peer,
-        *,
-        chats: dict[int, pylogram.raw.base.Chat] = None,
-        users: dict[int, pylogram.raw.base.User] = None,
-        allowed_only: bool = False
+    peer: pylogram.raw.base.Peer,
+    *,
+    chats: dict[int, pylogram.raw.base.Chat] = None,
+    users: dict[int, pylogram.raw.base.User] = None,
+    allowed_only: bool = False,
 ) -> pylogram.raw.base.InputPeer | None:
     if not bool(chats):
         chats = {}
@@ -536,10 +514,9 @@ def get_input_peer_from_peer(
     elif isinstance(peer, pylogram.raw.types.PeerChat):
         chat = chats.get(peer.chat_id)
 
-        if allowed_only and (not chat or isinstance(
-                chat,
-                (pylogram.raw.types.ChatForbidden, pylogram.raw.types.ChatEmpty)
-        )):
+        if allowed_only and (
+            not chat or isinstance(chat, (pylogram.raw.types.ChatForbidden, pylogram.raw.types.ChatEmpty))
+        ):
             return None
 
         return pylogram.raw.types.InputPeerChat(

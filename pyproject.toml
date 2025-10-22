@@ -57,3 +57,12 @@ Homepage = "https://github.com/pylakey/pylogram"
 # Add your scripts here
 compile_api = "compiler.api.compiler:start"
 compile_errors = "compiler.errors.compiler:start"
+
+
+[tool.ruff]
+src = ["pylogram", "compiler"]
+line-length = 120
+target-version = "py312"
+
+[tool.ruff.lint.isort]
+known-first-party = ["pylogram", "compiler"]
