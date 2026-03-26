@@ -153,8 +153,11 @@ class DialogsIterator:
         self.offset_date = (
             last_message.date if isinstance(last_message, (raw.types.Message, raw.types.MessageService)) else 0
         )
+        # Use the last raw dialog's peer for pagination offset (buffer may be empty
+        # if all dialogs were duplicates or consumed by the iterator)
+        offset_dialog = response.dialogs[-1]
         self.offset_peer = pylogram.peers.get_input_peer(
-            self.buffer[-1].get_raw().peer,
+            offset_dialog.peer,
             users=response.users,
             chats=response.chats,
         )
