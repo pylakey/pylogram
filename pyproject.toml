@@ -59,6 +59,13 @@ compile_api = "compiler.api.compiler:start"
 compile_errors = "compiler.errors.compiler:start"
 
 
+[dependency-groups]
+dev = [
+    "pytest",
+    "pytest-asyncio",
+    "pytest-cov",
+]
+
 [tool.hatch.version]
 path = "pylogram/__init__.py"
 
