@@ -17,7 +17,6 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with Pylogram.  If not, see <http://www.gnu.org/licenses/>.
 
-import asyncio
 import logging
 
 import pylogram
@@ -47,7 +46,5 @@ class Initialize:
         self.load_plugins()
 
         await self.dispatcher.start()
-
-        self.updates_watchdog_task = asyncio.create_task(self.updates_watchdog())
 
         self.is_initialized = True

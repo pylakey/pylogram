@@ -26,7 +26,6 @@ import platform
 import re
 import shutil
 from concurrent.futures.thread import ThreadPoolExecutor
-from datetime import datetime, timedelta
 from hashlib import sha256
 from importlib import import_module
 from io import BytesIO, StringIO
@@ -189,8 +188,6 @@ class Client(Methods):
     )
     WORKERS = min(8, (os.cpu_count() or 0) + 4)  # os.cpu_count() can be None
     DEFAULT_WORKDIR = PARENT_DIR
-    # Interval of seconds in which the updates watchdog will kick in
-    UPDATES_WATCHDOG_INTERVAL = 5 * 60
     MAX_CONCURRENT_TRANSMISSIONS = 1
 
     mimetypes = MimeTypes()
@@ -234,6 +231,7 @@ class Client(Methods):
         connection_protocol_class: Type[TCP] = TCPFull,
         commit_storage_peers_on_update: bool = False,
         invoke_middlewares: Optional[List] = None,
+        updates_config: "UpdatesConfig | None" = None,
     ):
         super().__init__()
 
@@ -271,6 +269,8 @@ class Client(Methods):
         self.commit_storage_peers_on_update = commit_storage_peers_on_update
         self._invoke_middlewares: list | None = invoke_middlewares
         self._invoker = None
+        self._updates_manager = None
+        self._updates_config = updates_config
 
         if isinstance(session_storage, Storage):
             self.storage = session_storage
@@ -297,12 +297,6 @@ class Client(Methods):
         self.me: Optional[User] = None
         self.message_cache = Cache(message_cache_size)
 
-        # Sometimes, for some reason, the server will stop sending updates and will only respond to pings.
-        # This watchdog will invoke updates.GetState in order to wake up the server and enable it sending updates again
-        # after some idle time has been detected.
-        self.updates_watchdog_task = None
-        self.updates_watchdog_event = asyncio.Event()
-        self.last_update_time = datetime.now()
         self.ignore_channel_updates_except = ignore_channel_updates_except
         self.dialogs: List[Dialog] = []
         self.dialogs_lock: asyncio.Lock = asyncio.Lock()
@@ -356,22 +350,6 @@ class Client(Methods):
             await self.stop()
         except ConnectionError:
             pass
-
-    async def updates_watchdog(self):
-        while True:
-            try:
-                await asyncio.wait_for(
-                    self.updates_watchdog_event.wait(), self.UPDATES_WATCHDOG_INTERVAL
-                )
-            except (asyncio.TimeoutError, TimeoutError):
-                pass
-            else:
-                break
-
-            if datetime.now() - self.last_update_time > timedelta(
-                seconds=self.UPDATES_WATCHDOG_INTERVAL
-            ):
-                await self.invoke(raw.functions.updates.GetState())
 
     async def fetch_phone_number(self) -> str:
         phone_number = self.phone_number
@@ -609,9 +587,17 @@ class Client(Methods):
 
         return is_min
 
-    async def handle_updates(self, updates):
-        self.last_update_time = datetime.now()
+    async def update_storage_peers_both(self, users: list, chats: list) -> None:
+        """Cache both users and chats (for UpdatesConfig.on_peers callback)."""
+        await self.update_storage_peers(users)
+        await self.update_storage_peers(chats)
 
+    async def handle_updates(self, updates):
+        if self._updates_manager is not None:
+            await self._updates_manager.handle(updates)
+            return
+
+        # Passthrough (gap_recovery disabled) — preserve old behavior
         if isinstance(updates, (raw.types.Updates, raw.types.UpdatesCombined)):
             is_min = any(
                 (
@@ -638,14 +624,12 @@ class Client(Methods):
 
                 if isinstance(update, raw.types.UpdateNewChannelMessage) and is_min:
                     message = update.message
-
                     if (
                         bool(self.ignore_channel_updates_except)
                         and utils.get_channel_id(channel_id)
                         not in self.ignore_channel_updates_except
                     ):
                         continue
-
                     if not isinstance(message, raw.types.MessageEmpty):
                         try:
                             diff = await self.invoke(
@@ -668,22 +652,18 @@ class Client(Methods):
                         except ChannelPrivate:
                             pass
                         else:
-                            if not isinstance(
-                                diff, raw.types.updates.ChannelDifferenceEmpty
-                            ):
+                            if not isinstance(diff, raw.types.updates.ChannelDifferenceEmpty):
                                 users.update({u.id: u for u in diff.users})
                                 chats.update({c.id: c for c in diff.chats})
 
                 self.dispatcher.updates_queue.put_nowait((update, users, chats))
-        elif isinstance(
-            updates, (raw.types.UpdateShortMessage, raw.types.UpdateShortChatMessage)
-        ):
+
+        elif isinstance(updates, (raw.types.UpdateShortMessage, raw.types.UpdateShortChatMessage)):
             diff = await self.invoke(
                 raw.functions.updates.GetDifference(
                     pts=updates.pts - updates.pts_count, date=updates.date, qts=-1
                 )
             )
-
             if diff.new_messages:
                 self.dispatcher.updates_queue.put_nowait(
                     (
@@ -697,10 +677,9 @@ class Client(Methods):
                     )
                 )
             else:
-                if diff.other_updates:  # The other_updates list can be empty
-                    self.dispatcher.updates_queue.put_nowait(
-                        (diff.other_updates[0], {}, {})
-                    )
+                if diff.other_updates:
+                    self.dispatcher.updates_queue.put_nowait((diff.other_updates[0], {}, {}))
+
         elif isinstance(updates, raw.types.UpdateShort):
             self.dispatcher.updates_queue.put_nowait((updates.update, {}, {}))
         elif isinstance(updates, raw.types.UpdatesTooLong):
