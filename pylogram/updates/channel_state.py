@@ -3,7 +3,8 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import TYPE_CHECKING
+from collections.abc import Awaitable, Callable
+from typing import Any, TYPE_CHECKING
 
 from .sequence_box import SequenceBox
 from .types import PendingUpdate
@@ -32,8 +33,8 @@ class ChannelState:
         access_hash: int,
         initial_pts: int,
         config: "UpdatesConfig",
-        deliver: "callable",  # (update, users, chats) -> None
-        get_difference: "callable",  # async (channel_id) -> None
+        deliver: Callable[..., Any],
+        get_difference: Callable[[int], Awaitable[None]],
     ) -> None:
         self.channel_id = channel_id
         self.access_hash = access_hash
@@ -64,6 +65,14 @@ class ChannelState:
     @property
     def pts(self) -> int:
         return self._box.state
+
+    def apply_difference(self, new_pts: int) -> list:
+        """Apply channel difference result. Returns drained pending updates."""
+        return self._box.apply_difference(new_pts)
+
+    def set_pts(self, new_pts: int) -> None:
+        """Set channel pts directly (for DifferenceEmpty/TooLong)."""
+        self._box.state = new_pts
 
     async def _run(self) -> None:
         # Sentinel objects -- identifiable by identity, not type

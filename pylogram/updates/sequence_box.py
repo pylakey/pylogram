@@ -54,6 +54,10 @@ class SequenceBox:
         self._gaps = GapBuffer()
         self._pending: list[PendingUpdate] = []
 
+    def clear_gaps(self) -> None:
+        """Clear all gap tracking state (called before getDifference)."""
+        self._gaps.clear()
+
     @property
     def has_gap(self) -> bool:
         """True when gap detection is active and waiting for missing updates."""

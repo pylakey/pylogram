@@ -154,7 +154,11 @@ class UpdatesManager:
                 idle_task.cancel()
                 idle_task = asyncio.create_task(_after(self._config.idle_timeout, _IDLE))
 
-                await self._dispatch_container(item)
+                try:
+                    await self._dispatch_container(item)
+                except Exception:
+                    log.exception("Unhandled error processing update %s — continuing", type(item).__name__)
+                    continue
 
                 # Sync gap timers with box states
                 if self._pts_box.has_gap and pts_gap_task is None:
@@ -394,14 +398,19 @@ class UpdatesManager:
         self._channels[channel_id] = state
         state.start()
 
+        def _on_channel_done(t: asyncio.Task, cid: int = channel_id) -> None:
+            self._channels.pop(cid, None)
+
+        state._task.add_done_callback(_on_channel_done)
+
     # ------------------------------------------------------------------
     # getDifference
     # ------------------------------------------------------------------
 
     async def _get_difference(self, first_sync: bool = False) -> None:
-        self._pts_box._gaps.clear()
-        self._qts_box._gaps.clear()
-        self._seq_box._gaps.clear()
+        self._pts_box.clear_gaps()
+        self._qts_box.clear_gaps()
+        self._seq_box.clear_gaps()
 
         limit = self._config.first_sync_limit if first_sync else None
 
@@ -511,7 +520,7 @@ class UpdatesManager:
             return
 
         if isinstance(diff, raw.types.updates.ChannelDifferenceEmpty):
-            state._box.state = diff.pts
+            state.set_pts(diff.pts)
             await self._config.set_channel_pts(channel_id, diff.pts)
 
         elif isinstance(diff, raw.types.updates.ChannelDifference):
@@ -525,7 +534,7 @@ class UpdatesManager:
                 )
             for update in diff.other_updates:
                 self._config.on_update(update, users, chats)
-            drained = state._box.apply_difference(diff.pts)
+            drained = state.apply_difference(diff.pts)
             for r in drained:
                 self._deliver(r)
             await self._config.set_channel_pts(channel_id, diff.pts)
@@ -533,7 +542,7 @@ class UpdatesManager:
                 await self._get_channel_difference(channel_id)
 
         elif isinstance(diff, raw.types.updates.ChannelDifferenceTooLong):
-            state._box.state = diff.pts
+            state.set_pts(diff.pts)
             await self._config.set_channel_pts(channel_id, diff.pts)
 
     # ------------------------------------------------------------------
