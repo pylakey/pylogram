@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.15.0
+
+### Added
+
+- **Update gap recovery** — full pts/qts/seq sequence tracking with automatic gap detection and recovery via `getDifference`.
+  - New `pylogram/updates/` package: `UpdatesManager`, `SequenceBox`, `GapBuffer`, `ChannelState`.
+  - Matches official Telegram Android client behaviour (1500ms gap timeout, peer-check on short updates).
+  - Per-channel `asyncio.Task` with lazy creation and configurable idle cleanup.
+  - Idle timeout (default 15 min) triggers `getDifference` as a safety net.
+  - `UpdatesConfig` — all tuning knobs: `gap_timeout`, `idle_timeout`, `diff_limit`, etc.
+  - `Client(updates_config=UpdatesConfig(...))` — opt-in customisation; auto-wired by default.
+  - `UpdatesConfig(enabled=False)` — passthrough mode preserving previous behaviour.
+
+### Changed
+
+- `UpdatesTooLong` now triggers `getDifference` instead of being silently logged.
+- `UpdateShortMessage` / `UpdateShortChatMessage` now synthesised from peer cache instead of always calling `getDifference`.
+- `updates_watchdog` removed — replaced by `idle_timeout` in `UpdatesManager`.
+- Storage schema bumped to version 4: new `update_state` and `channel_pts` tables (auto-migrated).
+
 ## 0.14.0
 
 ### Added
