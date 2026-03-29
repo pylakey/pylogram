@@ -51,7 +51,7 @@ class Connect:
         )
 
         await self.session.start()
-
+        self._build_invoker()
         self.is_connected = True
 
         return bool(await self.storage.user_id())

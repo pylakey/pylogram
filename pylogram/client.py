@@ -233,6 +233,7 @@ class Client(Methods):
         last_name: str = None,
         connection_protocol_class: Type[TCP] = TCPFull,
         commit_storage_peers_on_update: bool = False,
+        invoke_middlewares: Optional[List] = None,
     ):
         super().__init__()
 
@@ -268,6 +269,8 @@ class Client(Methods):
         self.executor = ThreadPoolExecutor(self.workers, thread_name_prefix="Handler")
         self.connection_protocol_class = connection_protocol_class
         self.commit_storage_peers_on_update = commit_storage_peers_on_update
+        self._invoke_middlewares: list | None = invoke_middlewares
+        self._invoker = None
 
         if isinstance(session_storage, Storage):
             self.storage = session_storage
@@ -303,6 +306,38 @@ class Client(Methods):
         self.ignore_channel_updates_except = ignore_channel_updates_except
         self.dialogs: List[Dialog] = []
         self.dialogs_lock: asyncio.Lock = asyncio.Lock()
+
+    def _build_invoker(self):
+        """Build the invoke middleware chain around Session.send().
+
+        If ``_invoke_middlewares`` is *None* (the default), the default stack
+        is used: ``[FloodWaitHandler, RetryHandler]`` — matching the
+        previously hardcoded behaviour in ``Session.invoke()``.
+        """
+        from pylogram.invoke_middleware import (
+            FloodWaitHandler,
+            RetryHandler,
+            chain as chain_middlewares,
+        )
+
+        client = self
+
+        async def _terminal(query, timeout):
+            await asyncio.wait_for(client.session.is_started.wait(), Session.WAIT_TIMEOUT)
+            result = await client.session.send(query, timeout=timeout)
+            await client.update_storage_peers(getattr(result, "users", []))
+            await client.update_storage_peers(getattr(result, "chats", []))
+            return result
+
+        if self._invoke_middlewares is None:
+            middlewares = [
+                FloodWaitHandler(sleep_threshold=self.sleep_threshold),
+                RetryHandler(max_retries=Session.MAX_RETRIES),
+            ]
+        else:
+            middlewares = self._invoke_middlewares
+
+        self._invoker = chain_middlewares(_terminal, *middlewares)
 
     def __enter__(self):
         return self.start()

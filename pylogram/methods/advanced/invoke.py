@@ -21,6 +21,7 @@ import logging
 
 import pylogram
 from pylogram import raw
+from pylogram.invoke_middleware import _max_retries_var, _sleep_threshold_var
 from pylogram.raw.core import TLObject
 from pylogram.session import Session
 
@@ -77,14 +78,12 @@ class Invoke:
         if self.takeout_id:
             query = raw.functions.InvokeWithTakeout(takeout_id=self.takeout_id, query=query)
 
-        r = await self.session.invoke(
-            query, retries, timeout,
-            (sleep_threshold
-             if sleep_threshold is not None
-             else self.sleep_threshold)
-        )
-
-        await self.update_storage_peers(getattr(r, "users", []))
-        await self.update_storage_peers(getattr(r, "chats", []))
-
-        return r
+        # Set per-call overrides via contextvars so middleware can read them.
+        threshold = sleep_threshold if sleep_threshold is not None else self.sleep_threshold
+        st_token = _sleep_threshold_var.set(threshold)
+        rt_token = _max_retries_var.set(retries)
+        try:
+            return await self._invoker(query, timeout)
+        finally:
+            _sleep_threshold_var.reset(st_token)
+            _max_retries_var.reset(rt_token)

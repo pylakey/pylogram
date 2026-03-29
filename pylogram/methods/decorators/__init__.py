@@ -17,6 +17,7 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with Pylogram.  If not, see <http://www.gnu.org/licenses/>.
 
+from .invoke_middleware import InvokeMiddleware
 from .middleware import Middleware
 from .on_callback_query import OnCallbackQuery
 from .on_chat_join_request import OnChatJoinRequest
@@ -33,6 +34,7 @@ from .on_user_status import OnUserStatus
 
 
 class Decorators(
+    InvokeMiddleware,
     Middleware,
     OnMessage,
     OnEditedMessage,

@@ -18,9 +18,11 @@
 #  along with Pylogram.  If not, see <http://www.gnu.org/licenses/>.
 
 from .add_handler import AddHandler
+from .add_invoke_middleware import AddInvokeMiddleware
 from .add_middleware import AddMiddleware
 from .export_session_string import ExportSessionString
 from .remove_handler import RemoveHandler
+from .remove_invoke_middleware import RemoveInvokeMiddleware
 from .remove_middleware import RemoveMiddleware
 from .restart import Restart
 from .start import Start
@@ -30,13 +32,15 @@ from .stop_transmission import StopTransmission
 
 class Utilities(
     AddHandler,
+    AddInvokeMiddleware,
     AddMiddleware,
     ExportSessionString,
     RemoveHandler,
+    RemoveInvokeMiddleware,
     RemoveMiddleware,
     Restart,
     Start,
     Stop,
-    StopTransmission
+    StopTransmission,
 ):
     pass
