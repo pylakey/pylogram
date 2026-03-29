@@ -93,6 +93,26 @@ class Storage(abc.ABC):
     async def is_bot(self, value: bool = object):
         raise NotImplementedError
 
+    @abc.abstractmethod
+    async def get_update_state(self) -> tuple[int, int, int, int] | None:
+        """Return (pts, qts, seq, date) or None if not persisted."""
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    async def set_update_state(self, pts: int, qts: int, seq: int, date: int) -> None:
+        """Persist global update state."""
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    async def get_channel_pts(self, channel_id: int) -> int | None:
+        """Return persisted pts for channel, or None."""
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    async def set_channel_pts(self, channel_id: int, pts: int) -> None:
+        """Persist pts for a channel."""
+        raise NotImplementedError
+
     async def export_session_string(self) -> str:
         packed = struct.pack(
             self.SESSION_STRING_FORMAT,

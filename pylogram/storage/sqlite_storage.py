@@ -57,6 +57,22 @@ CREATE TABLE version
     number INTEGER PRIMARY KEY
 );
 
+CREATE TABLE update_state
+(
+    id   INTEGER PRIMARY KEY CHECK (id = 1),
+    pts  INTEGER NOT NULL DEFAULT 0,
+    qts  INTEGER NOT NULL DEFAULT 0,
+    seq  INTEGER NOT NULL DEFAULT 0,
+    date INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE TABLE channel_pts
+(
+    channel_id INTEGER PRIMARY KEY,
+    pts        INTEGER NOT NULL,
+    last_update_on INTEGER NOT NULL DEFAULT (CAST(STRFTIME('%s', 'now') AS INTEGER))
+);
+
 CREATE INDEX idx_peers_id ON peers (id);
 CREATE INDEX idx_peers_username ON peers (username);
 CREATE INDEX idx_peers_phone_number ON peers (phone_number);
@@ -94,7 +110,7 @@ def get_input_peer(peer_id: int, access_hash: int, peer_type: str):
 
 
 class SQLiteStorage(Storage):
-    VERSION = 3
+    VERSION = 4
     USERNAME_TTL = 8 * 60 * 60
 
     def __init__(self, name: str):
@@ -225,3 +241,35 @@ class SQLiteStorage(Storage):
                     (value,)
                 )
                 self.conn.commit()
+
+    async def get_update_state(self) -> tuple[int, int, int, int] | None:
+        row = self.conn.execute(
+            "SELECT pts, qts, seq, date FROM update_state WHERE id = 1"
+        ).fetchone()
+        if row is None:
+            return None
+        pts, qts, seq, date = row
+        if pts == 0 and qts == 0 and seq == 0:
+            return None  # treat all-zeros as "not set"
+        return (pts, qts, seq, date)
+
+    async def set_update_state(self, pts: int, qts: int, seq: int, date: int) -> None:
+        with self.conn:
+            self.conn.execute(
+                "INSERT OR REPLACE INTO update_state (id, pts, qts, seq, date) VALUES (1, ?, ?, ?, ?)",
+                (pts, qts, seq, date),
+            )
+
+    async def get_channel_pts(self, channel_id: int) -> int | None:
+        row = self.conn.execute(
+            "SELECT pts FROM channel_pts WHERE channel_id = ?",
+            (channel_id,),
+        ).fetchone()
+        return row[0] if row else None
+
+    async def set_channel_pts(self, channel_id: int, pts: int) -> None:
+        with self.conn:
+            self.conn.execute(
+                "INSERT OR REPLACE INTO channel_pts (channel_id, pts) VALUES (?, ?)",
+                (channel_id, pts),
+            )

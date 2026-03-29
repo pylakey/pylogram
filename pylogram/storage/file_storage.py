@@ -51,6 +51,29 @@ class FileStorage(SQLiteStorage):
 
             version += 1
 
+        if version == 3:
+            with self.conn:
+                self.conn.execute("""
+                    CREATE TABLE IF NOT EXISTS update_state (
+                        id   INTEGER PRIMARY KEY CHECK (id = 1),
+                        pts  INTEGER NOT NULL DEFAULT 0,
+                        qts  INTEGER NOT NULL DEFAULT 0,
+                        seq  INTEGER NOT NULL DEFAULT 0,
+                        date INTEGER NOT NULL DEFAULT 0
+                    )
+                """)
+                self.conn.execute("""
+                    CREATE TABLE IF NOT EXISTS channel_pts (
+                        channel_id     INTEGER PRIMARY KEY,
+                        pts            INTEGER NOT NULL,
+                        last_update_on INTEGER NOT NULL
+                            DEFAULT (CAST(STRFTIME('%s', 'now') AS INTEGER))
+                    )
+                """)
+                self.conn.commit()
+
+            version += 1
+
         self.version(version)
 
     async def open(self):
