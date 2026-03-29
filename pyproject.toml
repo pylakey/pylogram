@@ -60,11 +60,7 @@ compile_errors = "compiler.errors.compiler:start"
 
 
 [dependency-groups]
-dev = [
-    "pytest",
-    "pytest-asyncio",
-    "pytest-cov",
-]
+dev = ["pytest", "pytest-asyncio", "pytest-cov", "hatchling"]
 
 [tool.hatch.version]
 path = "pylogram/__init__.py"
