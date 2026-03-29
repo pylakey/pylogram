@@ -139,6 +139,7 @@ class Session:
                                 system_lang_code=self.client.system_lang_code,
                                 lang_pack=self.client.lang_pack or "",
                                 lang_code=self.client.lang_code,
+                                params=self.client.connection_params.to_json_object() if self.client.connection_params else None,
                                 query=raw.functions.help.GetConfig(),
                             )
                         ),

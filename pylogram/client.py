@@ -232,6 +232,7 @@ class Client(Methods):
         commit_storage_peers_on_update: bool = False,
         invoke_middlewares: Optional[List] = None,
         updates_config: "UpdatesConfig | None" = None,
+        connection_params: "ConnectionParams | None" = None,
     ):
         super().__init__()
 
@@ -271,6 +272,7 @@ class Client(Methods):
         self._invoker = None
         self._updates_manager = None
         self._updates_config = updates_config
+        self.connection_params = connection_params
 
         if isinstance(session_storage, Storage):
             self.storage = session_storage
