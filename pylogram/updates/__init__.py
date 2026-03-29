@@ -1,4 +1,4 @@
+from .manager import UpdatesManager
 from .types import UpdatesConfig
 
-# UpdatesManager exported in Task 8 once manager.py exists
-__all__ = ["UpdatesConfig"]
+__all__ = ["UpdatesManager", "UpdatesConfig"]
