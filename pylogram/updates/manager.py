@@ -542,8 +542,9 @@ class UpdatesManager:
                 await self._get_channel_difference(channel_id)
 
         elif isinstance(diff, raw.types.updates.ChannelDifferenceTooLong):
-            state.set_pts(diff.pts)
-            await self._config.set_channel_pts(channel_id, diff.pts)
+            new_pts = diff.dialog.pts
+            state.set_pts(new_pts)
+            await self._config.set_channel_pts(channel_id, new_pts)
 
     # ------------------------------------------------------------------
     # Helpers

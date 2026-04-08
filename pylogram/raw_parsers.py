@@ -467,8 +467,6 @@ def parse_raw_dialogs(
     result: list[pylogram.types.Dialog] = []
 
     for dialog in dialogs:
-        dialog_peer_id = pylogram.utils.get_raw_peer_id(dialog.peer)
-
         if not bool(dialog.top_message):
             continue
 
@@ -486,7 +484,10 @@ def parse_raw_dialogs(
             continue
 
         top_message = parse_raw_message(
-            client, messages[(dialog_peer_id, dialog.top_message)], users, chats
+            client,
+            messages[pylogram.utils.get_dialog_message_key(dialog.peer, dialog.top_message)],
+            users,
+            chats,
         )
         parsed_dialog = pylogram.types.Dialog(
             client=client,

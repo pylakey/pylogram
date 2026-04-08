@@ -247,6 +247,11 @@ def get_peer_id(peer: raw.base.Peer | raw.base.InputPeer) -> int:
     raise ValueError(f"Peer type invalid: {peer}")
 
 
+def get_dialog_message_key(peer: "raw.base.Peer", message_id: int) -> tuple[int, int]:
+    """Build the (raw_peer_id, message_id) key used to index dialog messages."""
+    return get_raw_peer_id(peer), message_id
+
+
 def get_peer_type(peer_id: int) -> str:
     if peer_id < 0:
         if MIN_CHAT_ID <= peer_id:
