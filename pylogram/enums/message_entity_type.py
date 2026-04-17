@@ -81,5 +81,8 @@ class MessageEntityType(AutoName):
     CUSTOM_EMOJI = raw.types.MessageEntityCustomEmoji
     "Custom emoji"
 
+    FORMATTED_DATE = raw.types.MessageEntityFormattedDate
+    "Formatted date"
+
     UNKNOWN = raw.types.MessageEntityUnknown
     "Unknown message entity type"
