@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.16.2
+
+### Fixed
+
+- `UpdatesManager._apply_full_difference` now reads `intermediate_state` from `updates.differenceSlice` instead of the non-existent `state` attribute, preventing an `AttributeError` during first-sync `getDifference` when the server returns a sliced response.
+
+## 0.16.1
+
+### Added
+
+- `utils.get_dialog_message_key` helper, shared between `get_dialogs` and `raw_parsers` for consistent dialog message keying.
+
+### Fixed
+
+- `UpdatesManager` now reads `pts` from `diff.dialog.pts` in the `ChannelDifferenceTooLong` branch, correcting channel state recovery when the server reports a too-long channel diff.
+
+## 0.16.0
+
+### Added
+
+- `ConnectionParams` — typed dataclass serialised to a TL `JsonObject`, covering the six Android-client `initConnection.params` keys (`device_token`, `data`, `installer`, `package_id`, `tz_offset`, `perf_cat`). Passed via the `Client` constructor and wired through `Session.start()` into `InitConnection`.
+
 ## 0.15.0
 
 ### Added

@@ -484,7 +484,11 @@ class UpdatesManager:
             else:
                 self._config.on_update(update, users, chats)
 
-        new_state = diff.state
+        new_state = (
+            diff.intermediate_state
+            if isinstance(diff, raw.types.updates.DifferenceSlice)
+            else diff.state
+        )
         drained_pts = self._pts_box.apply_difference(new_state.pts)
         drained_qts = self._qts_box.apply_difference(new_state.qts)
         self._seq_box.apply_difference(new_state.seq)

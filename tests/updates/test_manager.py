@@ -154,6 +154,39 @@ async def test_gap_triggers_get_difference_after_timeout():
 
 
 @pytest.mark.asyncio
+async def test_get_difference_applies_slice_intermediate_state():
+    """Regression: DifferenceSlice exposes `intermediate_state`, not `state`."""
+    slice_result = raw.types.updates.DifferenceSlice(
+        new_messages=[],
+        new_encrypted_messages=[],
+        other_updates=[],
+        chats=[],
+        users=[],
+        intermediate_state=raw.types.updates.State(
+            pts=150, qts=0, date=1500, seq=0, unread_count=0,
+        ),
+    )
+    empty_result = raw.types.updates.DifferenceEmpty(date=1500, seq=0)
+
+    invoke_mock = AsyncMock(side_effect=[slice_result, empty_result])
+    cfg = _make_config(
+        invoke=invoke_mock,
+        get_state=AsyncMock(return_value=(100, 0, 0, 1000)),
+    )
+
+    manager = UpdatesManager(cfg)
+    await manager.start()
+    await manager.stop()
+
+    assert manager._pts_box.state == 150
+    diff_calls = [
+        c for c in invoke_mock.call_args_list
+        if isinstance(c[0][0], raw.functions.updates.GetDifference)
+    ]
+    assert len(diff_calls) == 2
+
+
+@pytest.mark.asyncio
 async def test_updates_too_long_triggers_get_difference():
     """UpdatesTooLong immediately triggers getDifference."""
     state_result = MagicMock(pts=100, qts=0, seq=0, date=0)
